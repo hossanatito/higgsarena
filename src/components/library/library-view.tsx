@@ -62,18 +62,18 @@ export function LibraryView({ items: initial, filters, models, members, teams, i
         )}
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <label className="sr-only" htmlFor="flt-type">Type</label>
-          <Select id="flt-type" className="h-10 sm:w-36" value={filters.type ?? ""} onChange={(e) => set("type", e.target.value || undefined)}>
+          <Select id="flt-type" className="h-10 rounded-full border-transparent bg-surface-2 sm:w-36" value={filters.type ?? ""} onChange={(e) => set("type", e.target.value || undefined)}>
             <option value="">All types</option>
             <option value="image">Images</option>
             <option value="video">Videos</option>
           </Select>
           <label className="sr-only" htmlFor="flt-model">Model</label>
-          <Select id="flt-model" className="h-10 sm:w-56" value={filters.model ?? ""} onChange={(e) => set("model", e.target.value || undefined)}>
+          <Select id="flt-model" className="h-10 rounded-full border-transparent bg-surface-2 sm:w-56" value={filters.model ?? ""} onChange={(e) => set("model", e.target.value || undefined)}>
             <option value="">All models</option>
             {models.map((m) => <option key={m.slug} value={m.slug}>{m.name}</option>)}
           </Select>
           <label className="sr-only" htmlFor="flt-status">Status</label>
-          <Select id="flt-status" className="h-10 sm:w-40" value={filters.status ?? ""} onChange={(e) => set("status", e.target.value || undefined)}>
+          <Select id="flt-status" className="h-10 rounded-full border-transparent bg-surface-2 sm:w-40" value={filters.status ?? ""} onChange={(e) => set("status", e.target.value || undefined)}>
             <option value="">Any status</option>
             <option value="completed">Done</option>
             <option value="in_progress">Rendering</option>
@@ -83,24 +83,24 @@ export function LibraryView({ items: initial, filters, models, members, teams, i
             <option value="canceled">Canceled</option>
           </Select>
           <label className="sr-only" htmlFor="flt-from">From date</label>
-          <input id="flt-from" type="date" value={filters.from ?? ""} onChange={(e) => set("from", e.target.value || undefined)} className="h-10 rounded-[10px] border border-border bg-bg-elevated px-3 text-sm text-fg" />
+          <input id="flt-from" type="date" value={filters.from ?? ""} onChange={(e) => set("from", e.target.value || undefined)} className="h-10 rounded-full border border-transparent bg-surface-2 px-4 text-sm text-fg" />
           <label className="sr-only" htmlFor="flt-to">To date</label>
-          <input id="flt-to" type="date" value={filters.to ?? ""} onChange={(e) => set("to", e.target.value || undefined)} className="h-10 rounded-[10px] border border-border bg-bg-elevated px-3 text-sm text-fg" />
+          <input id="flt-to" type="date" value={filters.to ?? ""} onChange={(e) => set("to", e.target.value || undefined)} className="h-10 rounded-full border border-transparent bg-surface-2 px-4 text-sm text-fg" />
           {scope === "org" && (
             <>
               <label className="sr-only" htmlFor="flt-member">Member</label>
-              <Select id="flt-member" className="h-10 sm:w-52" value={filters.member ?? ""} onChange={(e) => set("member", e.target.value || undefined)}>
+              <Select id="flt-member" className="h-10 rounded-full border-transparent bg-surface-2 sm:w-52" value={filters.member ?? ""} onChange={(e) => set("member", e.target.value || undefined)}>
                 <option value="">All members</option>
                 {members.map((m) => <option key={m.id} value={m.id}>{m.name || m.email}</option>)}
               </Select>
               <label className="sr-only" htmlFor="flt-team">Team</label>
-              <Select id="flt-team" className="h-10 sm:w-44" value={filters.team ?? ""} onChange={(e) => set("team", e.target.value || undefined)}>
+              <Select id="flt-team" className="h-10 rounded-full border-transparent bg-surface-2 sm:w-44" value={filters.team ?? ""} onChange={(e) => set("team", e.target.value || undefined)}>
                 <option value="">All teams</option>
                 {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </Select>
             </>
           )}
-          <button type="button" aria-pressed={filters.fav === "1"} onClick={() => set("fav", filters.fav === "1" ? undefined : "1")} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-full border px-3.5 text-sm", filters.fav === "1" ? "border-transparent bg-accent-soft text-accent-text" : "border-border text-fg-muted hover:text-fg")}>
+          <button type="button" aria-pressed={filters.fav === "1"} onClick={() => set("fav", filters.fav === "1" ? undefined : "1")} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-sm transition-colors", filters.fav === "1" ? "bg-accent-soft text-accent-text" : "bg-surface-2 text-fg-muted hover:text-fg")}>
             <Heart size={16} weight={filters.fav === "1" ? "fill" : "regular"} aria-hidden /> Favourites
           </button>
         </div>

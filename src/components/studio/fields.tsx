@@ -88,7 +88,7 @@ function JsonField({ id, value, onChange, error }: { id: string; value: unknown;
   );
 }
 
-export function FieldInput({ field, value, onChange, error, characters, maxMb, keySource, modelSlug }: { field: FieldSpec; value: unknown; onChange: (v: unknown) => void; error?: string; characters: CharacterOption[]; maxMb: number; keySource?: "org" | "personal"; modelSlug: string }) {
+export function FieldInput({ field, value, onChange, error, characters, maxMb, keySource, modelSlug, compact }: { field: FieldSpec; value: unknown; onChange: (v: unknown) => void; error?: string; characters: CharacterOption[]; maxMb: number; keySource?: "org" | "personal"; modelSlug: string; compact?: boolean }) {
   const id = `f-${field.name}`;
   const labelEl = (
     <span id={`${id}-label`} className="mb-1.5 flex items-baseline justify-between gap-2 text-[13px] font-medium text-fg-muted">
@@ -111,7 +111,7 @@ export function FieldInput({ field, value, onChange, error, characters, maxMb, k
     case "audios":
       return (
         <div>
-          <Dropzone id={id} kind={field.kind} label={field.label} value={value} onChange={onChange} maxItems={field.maxItems} maxMb={maxMb} keySource={keySource} required={field.required} />
+          <Dropzone id={id} kind={field.kind} label={field.label} value={value} onChange={onChange} maxItems={field.maxItems} maxMb={maxMb} keySource={keySource} required={field.required} compact={compact} />
           {err}
         </div>
       );
@@ -231,7 +231,7 @@ export function settingsSummary(fields: FieldSpec[], values: Values): string {
     if (v === undefined || v === "") continue;
     if (f.kind === "select" || f.kind === "integer" || f.kind === "number") parts.push(f.name === "duration" ? `${v}s` : String(v));
     else if (f.kind === "boolean" && v === true) parts.push(f.label);
-    if (parts.length >= 5) break;
+    if (parts.length >= 3) break;
   }
-  return parts.join(" · ");
+  return parts.join(", ");
 }

@@ -63,7 +63,7 @@ export default async function OverridesPage() {
               <Td className="text-fg-muted">{o.modelSlug}</Td>
               <Td className="mono text-right">{usd(o.amountUsd, { precise: true })}</Td>
               <Td><Badge tone={tone[o.status]}>{o.status}</Badge></Td>
-              <Td className="text-fg-muted">{deciderEmail ?? "—"}{o.decisionNote ? <span className="block text-[12px]">“{o.decisionNote}”</span> : null}</Td>
+              <Td className="text-fg-muted">{deciderEmail ?? "-"}{o.decisionNote ? <span className="block text-[12px]">“{o.decisionNote}”</span> : null}</Td>
             </tr>
           ))}
         </tbody>

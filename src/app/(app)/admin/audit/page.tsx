@@ -10,7 +10,7 @@ export const metadata = { title: "Audit log" };
 
 function Diff({ before, after }: { before: Record<string, unknown> | null; after: Record<string, unknown> | null }) {
   const keys = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])].filter((k) => JSON.stringify(before?.[k]) !== JSON.stringify(after?.[k]));
-  if (!keys.length) return <span className="text-fg-subtle">—</span>;
+  if (!keys.length) return <span className="text-fg-subtle">-</span>;
   const show = (v: unknown) => (v === undefined ? "∅" : typeof v === "object" && v !== null ? JSON.stringify(v).slice(0, 80) : String(v));
   return (
     <ul className="mono grid gap-0.5 text-[12px]">
@@ -52,7 +52,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
               <Td className="mono text-[13px]">{r.action}</Td>
               <Td className="mono max-w-40 truncate text-[12px] text-fg-muted" title={`${r.targetType}:${r.targetId}`}>{r.targetType}{r.targetId ? `:${r.targetId.slice(0, 12)}` : ""}</Td>
               <Td><Diff before={r.before} after={r.after} /></Td>
-              <Td className="mono text-[12px] text-fg-subtle">{r.ip ?? "—"}</Td>
+              <Td className="mono text-[12px] text-fg-subtle">{r.ip ?? "-"}</Td>
             </tr>
           ))}
         </tbody>

@@ -29,7 +29,7 @@ export function TeamCard({ t, members, all, spend, count, budget }: { t: { id: s
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-[12px] bg-surface-2 p-2"><p className="text-[11px] text-fg-muted">This month</p><p className="mono text-sm font-semibold">{usd(spend)}</p></div>
-        <div className="rounded-[12px] bg-surface-2 p-2"><p className="text-[11px] text-fg-muted">Budget</p><p className="mono text-sm font-semibold">{budget !== null ? usd(budget) : "—"}</p></div>
+        <div className="rounded-[12px] bg-surface-2 p-2"><p className="text-[11px] text-fg-muted">Budget</p><p className="mono text-sm font-semibold">{budget !== null ? usd(budget) : "-"}</p></div>
         <div className="rounded-[12px] bg-surface-2 p-2"><p className="text-[11px] text-fg-muted">Jobs</p><p className="mono text-sm font-semibold">{count}</p></div>
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">

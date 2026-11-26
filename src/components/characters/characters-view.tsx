@@ -73,7 +73,7 @@ export function CharactersView({ initial, enabled, maxUploadMb }: { initial: C[]
               </div>
               <p className="mt-1.5 text-[12px] text-fg-subtle">Characters work with the matching SOUL model only.</p>
             </div>
-            <Dropzone id="char-images" kind="images" label="Reference photos (1–100)" value={images} onChange={(v) => setImages((v as string[]) ?? [])} maxItems={100} maxMb={maxUploadMb} required compact />
+            <Dropzone id="char-images" kind="images" label="Reference photos (1 to 100)" value={images} onChange={(v) => setImages((v as string[]) ?? [])} maxItems={100} maxMb={maxUploadMb} required compact />
             {error && <Notice tone="danger">{error}</Notice>}
             <Button type="submit" variant="primary" disabled={busy || !name.trim() || images.length === 0}>{busy ? "Starting…" : "Start training"}</Button>
             <p className="text-[12px] text-fg-subtle">Use clear, well-lit photos of one person from several angles. Higgsfield limits how many characters train at once.</p>

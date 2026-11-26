@@ -20,7 +20,7 @@ const ITEMS = [
 export function AdminNav({ isOwner, pending }: { isOwner: boolean; pending: number }) {
   const path = usePathname();
   return (
-    <nav aria-label="Admin" className="scrollbar-none -mx-4 mb-6 overflow-x-auto px-4 sm:-mx-6 sm:px-6">
+    <nav aria-label="Admin" className="scrollbar-none -mx-4 mb-6 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:hidden">
       <ul className="flex min-w-max gap-1 border-b border-border">
         {ITEMS.filter((i) => !i.owner || isOwner).map((i) => {
           const on = i.href === "/admin" ? path === "/admin" : path.startsWith(i.href);

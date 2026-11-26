@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { MagnifyingGlass, Star, ArrowSquareOut } from "@phosphor-icons/react";
+import { FilmSlate, ImageSquare, MagnifyingGlass, PaintBrush, PersonSimpleRun, Star, UserFocus } from "@phosphor-icons/react";
 import { CATEGORY_LABELS, type Category } from "@/lib/catalog/types";
 import { cn } from "@/lib/cn";
 import type { PublicModel } from "./types";
@@ -43,8 +43,21 @@ export function workflowLabel(m: Pick<PublicModel, "workflow" | "mode">): string
   const mode = MODE_LABEL[m.mode] ?? m.mode;
   if (!m.workflow) return mode;
   const w = m.workflow.toLowerCase();
-  if (w.includes(mode.toLowerCase()) || /^(generate|text to image)$/.test(w) || (m.mode === "reference" && w.includes("reference"))) return m.workflow;
-  return `${m.workflow} · ${mode}`;
+  if (/^(generate|generate ads)$/.test(w)) return mode;
+  if (w.includes(mode.toLowerCase()) || (m.mode === "reference" && w.includes("reference"))) return m.workflow;
+  return `${m.workflow}, ${mode.toLowerCase()}`;
+}
+
+const GLYPH = { image: ImageSquare, edit: PaintBrush, video: FilmSlate, motion: PersonSimpleRun, character: UserFocus } as const;
+
+/** Category glyph instead of two-letter initials. */
+function ModelGlyph({ m, on }: { m: PublicModel; on: boolean }) {
+  const Icon = GLYPH[m.category as keyof typeof GLYPH] ?? ImageSquare;
+  return (
+    <span aria-hidden className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-[10px] transition-colors", on ? "bg-accent text-accent-fg" : "bg-surface-2 text-fg-muted group-hover:text-fg")}>
+      <Icon size={18} weight={on ? "fill" : "regular"} />
+    </span>
+  );
 }
 
 export function ModelList({ models, category, selected, onSelect }: { models: PublicModel[]; category: Category; selected: string; onSelect: (slug: string) => void }) {
@@ -63,41 +76,26 @@ export function ModelList({ models, category, selected, onSelect }: { models: Pu
         <MagnifyingGlass size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle" aria-hidden />
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search models" className="h-10 w-full rounded-[10px] border border-border bg-bg-elevated pr-3 pl-9 text-sm text-fg placeholder:text-fg-subtle focus:border-accent-text focus:outline-none" />
       </label>
-      <ul className="-mx-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-1" aria-label="Models">
+      <ul className="fade-y -mx-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-1 pb-6" aria-label="Models">
         {list.length === 0 && <li className="px-2 py-6 text-center text-sm text-fg-muted">No models match.</li>}
         {list.map((m) => {
           const on = m.slug === selected;
           return (
             <li key={m.slug}>
-              <button type="button" onClick={() => onSelect(m.slug)} aria-pressed={on} className={cn("flex w-full items-center gap-3 rounded-[12px] px-2.5 py-2 text-left transition-colors", on ? "bg-surface-2" : "hover:bg-surface-2/60")}>
-                <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-[11px] font-bold", on ? "bg-accent text-accent-fg" : "bg-surface-3 text-fg-muted")} aria-hidden>
-                  {m.family.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase()}
-                </span>
+              <button type="button" onClick={() => onSelect(m.slug)} aria-pressed={on} className={cn("group flex w-full items-center gap-3 rounded-[12px] px-2.5 py-2 text-left transition-colors", on ? "bg-surface-2" : "hover:bg-surface-2/60")}>
+                <ModelGlyph m={m} on={on} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-medium text-fg">{m.family}</span>
-                    {m.featured && <Star size={12} weight="fill" className="shrink-0 text-accent-text" aria-label="Featured" />}
+                    <span className="fade-x min-w-0 flex-1 whitespace-nowrap text-sm font-medium text-fg">{m.family}</span>
+                    {m.featured && <Star size={11} weight="fill" className="shrink-0 text-accent-text" aria-label="Featured" />}
                   </span>
-                  <span className="block truncate text-[12px] text-fg-subtle">{workflowLabel(m)} · {m.provider}</span>
+                  <span className="fade-x block whitespace-nowrap text-[12px] text-fg-subtle">{workflowLabel(m)}</span>
                 </span>
               </button>
             </li>
           );
         })}
       </ul>
-    </div>
-  );
-}
-
-export function ModelInfo({ model }: { model: PublicModel }) {
-  return (
-    <div className="flex items-center gap-2 text-[12px] text-fg-subtle">
-      {model.workflow.toLowerCase() !== (MODE_LABEL[model.mode] ?? model.mode).toLowerCase() && <span className="truncate">{MODE_LABEL[model.mode] ?? model.mode}</span>}
-      {model.docsUrl && (
-        <a href={model.docsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-fg-muted hover:text-fg">
-          Docs <ArrowSquareOut size={12} aria-hidden />
-        </a>
-      )}
     </div>
   );
 }

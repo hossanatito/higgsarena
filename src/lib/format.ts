@@ -1,14 +1,14 @@
 /** Formatting helpers shared by server and client components. */
 export function usd(value: string | number | null | undefined, opts: { precise?: boolean } = {}): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "-";
   const n = Number(value);
-  if (!Number.isFinite(n)) return "—";
+  if (!Number.isFinite(n)) return "-";
   const digits = opts.precise || (n > 0 && n < 0.1) ? 3 : 2;
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: digits })}`;
 }
 
 export function pct(v: number | null | undefined): string {
-  if (v === null || v === undefined || !Number.isFinite(v)) return "—";
+  if (v === null || v === undefined || !Number.isFinite(v)) return "-";
   return `${Math.round(v * 100)}%`;
 }
 
@@ -17,7 +17,7 @@ export function num(v: number): string {
 }
 
 export function relativeTime(date: Date | string | null | undefined, now = Date.now()): string {
-  if (!date) return "—";
+  if (!date) return "-";
   const t = typeof date === "string" ? new Date(date).getTime() : date.getTime();
   const diff = Math.round((t - now) / 1000);
   const abs = Math.abs(diff);
@@ -29,13 +29,13 @@ export function relativeTime(date: Date | string | null | undefined, now = Date.
 }
 
 export function dateTime(date: Date | string | null | undefined): string {
-  if (!date) return "—";
+  if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 export function duration(seconds: number | null | undefined): string {
-  if (seconds === null || seconds === undefined) return "—";
+  if (seconds === null || seconds === undefined) return "-";
   if (seconds < 60) return `${Math.round(seconds)}s`;
   return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 }

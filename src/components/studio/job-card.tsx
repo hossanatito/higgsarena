@@ -1,6 +1,7 @@
 "use client";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowsClockwise, DownloadSimple, Heart, Prohibit, Warning, XCircle, Clock, CircleNotch, FileArchive } from "@phosphor-icons/react";
+import type { ComponentType } from "react";
+import { ArrowCounterClockwise, ClockCountdown, CloudSlash, DownloadSimple, EyeSlash, FileArchive, Heart, HourglassMedium, PaperPlaneTilt, Play, Prohibit, Shuffle, Sparkle, Stack, WarningOctagon, type IconProps } from "@phosphor-icons/react";
 import { cn } from "@/lib/cn";
 import { expiryLabel, relativeTime, usd } from "@/lib/format";
 import type { ClientGeneration } from "./types";
@@ -29,7 +30,7 @@ export function altText(g: Pick<ClientGeneration, "prompt" | "modelName">): stri
   return g.prompt ? `Generated with ${g.modelName}: ${g.prompt.slice(0, 180)}` : `Generated with ${g.modelName}`;
 }
 
-export function MediaPreview({ g, className, controls }: { g: ClientGeneration; className?: string; controls?: boolean }) {
+export function MediaPreview({ g, className, controls, fill }: { g: ClientGeneration; className?: string; controls?: boolean; fill?: boolean }) {
   const visual = g.outputs.filter((o) => o.kind === "image" || o.kind === "video");
   const first = visual[0];
   if (!first) {
@@ -38,94 +39,164 @@ export function MediaPreview({ g, className, controls }: { g: ClientGeneration; 
     return <div className={cn("grid place-items-center bg-surface-2 text-fg-subtle", className)} style={{ aspectRatio: aspectOf(g) }}><FileArchive size={28} aria-hidden /></div>;
   }
   if (first.kind === "video") {
-    return <video src={first.displayUrl} className={cn("block w-full bg-black object-cover", className)} style={{ aspectRatio: aspectOf(g) }} muted={!controls} loop playsInline autoPlay={!controls} controls={controls} preload="metadata" aria-label={altText(g)} />;
+    return <video src={first.displayUrl} className={cn("block w-full bg-black object-cover", fill && "h-full", className)} style={fill ? undefined : { aspectRatio: aspectOf(g) }} muted={!controls} loop playsInline autoPlay={!controls} controls={controls} preload="metadata" aria-label={altText(g)} />;
   }
   if (visual.length > 1 && !controls) {
     return (
-      <div className={cn("grid grid-cols-2 gap-0.5 bg-surface-2", className)}>
-        {visual.slice(0, 4).map((o) => <img key={o.url} src={o.displayUrl} alt={altText(g)} loading="lazy" className="aspect-square w-full object-cover" />)}
+      <div className={cn("grid grid-cols-2 gap-0.5 bg-surface-2", fill && "h-full grid-rows-2", className)}>
+        {visual.slice(0, 4).map((o) => <img key={o.url} src={o.displayUrl} alt={altText(g)} loading="lazy" className={cn("w-full object-cover", fill ? "h-full" : "aspect-square")} />)}
       </div>
     );
   }
-  return <img src={first.displayUrl} alt={altText(g)} loading="lazy" className={cn("block w-full object-cover", className)} style={{ aspectRatio: aspectOf(g) }} />;
+  return <img src={first.displayUrl} alt={altText(g)} loading="lazy" className={cn("block w-full object-cover", fill && "h-full", className)} style={fill ? undefined : { aspectRatio: aspectOf(g) }} />;
 }
 
-const DOT: Record<string, string> = { neutral: "bg-white/60", accent: "bg-[#c6f432]", ok: "bg-[#4ade80]", warn: "bg-[#fbbf24]", danger: "bg-[#f87171]", info: "bg-[#60a5fa]" };
+const STATUS_ICON: Record<ClientGeneration["status"], ComponentType<IconProps>> = {
+  submitting: PaperPlaneTilt,
+  queued: HourglassMedium,
+  in_progress: Sparkle,
+  completed: Sparkle,
+  failed: WarningOctagon,
+  nsfw: EyeSlash,
+  canceled: Prohibit,
+  error: CloudSlash,
+};
 
-/** Badges that sit on top of media: solid dark backing so they read on any image. */
-function MediaBadge({ tone, children, title }: { tone: keyof typeof DOT; children: React.ReactNode; title?: string }) {
+const STATUS_TEXT: Partial<Record<ClientGeneration["status"], string>> = {
+  submitting: "Sending to Higgsfield",
+  queued: "Waiting in the queue",
+  in_progress: "Rendering",
+  nsfw: "Moderated. Not charged.",
+  canceled: "Canceled. Not charged.",
+};
+
+/** Small glass control that sits on top of media. */
+function OverlayButton({ label, onClick, href, children, pressed, hideOnTouch }: { label: string; onClick?: () => void; href?: string; children: React.ReactNode; pressed?: boolean; hideOnTouch?: boolean }) {
+  const cls = cn("grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-md transition-colors hover:bg-black/70 pointer-coarse:h-11 pointer-coarse:w-11", hideOnTouch && "pointer-coarse:hidden");
+  if (href) {
+    return (
+      <a href={href} download target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className={cls}>
+        {children}
+      </a>
+    );
+  }
   return (
-    <span title={title} className="inline-flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-0.5 text-xs font-medium whitespace-nowrap text-white backdrop-blur">
-      <span className={cn("h-1.5 w-1.5 rounded-full", DOT[tone])} aria-hidden />
+    <button type="button" onClick={onClick} aria-label={label} title={label} aria-pressed={pressed} className={cls}>
+      {children}
+    </button>
+  );
+}
+
+function Chip({ children, tone = "neutral", title }: { children: React.ReactNode; tone?: "neutral" | "warn"; title?: string }) {
+  return (
+    <span title={title} className={cn("inline-flex h-6 items-center gap-1 rounded-full px-2 text-[11px] font-medium whitespace-nowrap backdrop-blur-md", tone === "warn" ? "bg-black/55 text-[#fcd34d]" : "bg-black/45 text-white/90")}>
       {children}
     </span>
   );
 }
 
-export function JobCard({ g, onRemix, onCancel, onOpen, onFavorite }: { g: ClientGeneration; onRemix?: (g: ClientGeneration) => void; onCancel?: (g: ClientGeneration) => void; onOpen?: (g: ClientGeneration) => void; onFavorite?: (g: ClientGeneration) => void }) {
+export function JobCard({ g, onRemix, onCancel, onOpen, onFavorite, tile }: { g: ClientGeneration; onRemix?: (g: ClientGeneration) => void; onCancel?: (g: ClientGeneration) => void; onOpen?: (g: ClientGeneration) => void; onFavorite?: (g: ClientGeneration) => void; tile?: boolean }) {
   const reduce = useReducedMotion();
-  const st = STATUS[g.status];
   const active = g.status === "submitting" || g.status === "queued" || g.status === "in_progress";
-  const expiry = g.status === "completed" && !g.mirrored ? expiryLabel(g.expiresAt) : null;
-  const cost = g.status === "completed" ? (g.costUnknown ? "cost unknown" : usd(g.costUsd)) : active ? `≈ ${usd(g.estimatedCostUsd)}` : "$0";
+  const done = g.status === "completed";
+  const expiry = done && !g.mirrored ? expiryLabel(g.expiresAt) : null;
+  const expired = !!expiry?.expired;
+  const showMedia = done && !expired;
+  const cost = done ? (g.costUnknown ? "cost unknown" : usd(g.costUsd)) : active ? `≈ ${usd(g.estimatedCostUsd)}` : "$0";
+  const images = g.outputs.filter((o) => o.kind === "image").length;
+  const Icon = expired ? ClockCountdown : STATUS_ICON[g.status];
+  const failed = g.status === "failed" || g.status === "error";
+
   return (
-    <motion.article layout={!reduce} initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 380, damping: 34 }} className="panel overflow-hidden" aria-busy={active}>
-      <div className="relative">
-        {g.status === "completed" && !expiry?.expired ? (
-          <button type="button" className="block w-full cursor-zoom-in" onClick={() => onOpen?.(g)} aria-label={`Open ${g.modelName} result`}>
-            <MediaPreview g={g} />
-          </button>
-        ) : (
-          <div className={cn("grid place-items-center", active ? "shimmer" : "bg-surface-2")} style={{ aspectRatio: aspectOf(g) }}>
-            <div className="flex flex-col items-center gap-2 px-6 text-center text-fg-muted">
-              {active && (g.status === "in_progress" ? <CircleNotch size={26} className="animate-spin text-accent-text" aria-hidden /> : <Clock size={26} aria-hidden />)}
-              {g.status === "failed" || g.status === "error" ? <XCircle size={26} className="text-danger" aria-hidden /> : null}
-              {g.status === "nsfw" && <Prohibit size={26} className="text-warn" aria-hidden />}
-              {g.status === "canceled" && <XCircle size={26} aria-hidden />}
-              {expiry?.expired && <Warning size={26} className="text-warn" aria-hidden />}
-              <p className="text-[13px]">
-                {g.status === "queued" && "Waiting in the Higgsfield queue"}
-                {g.status === "submitting" && (g.error ? `Retrying: ${g.error}` : "Sending to Higgsfield")}
-                {g.status === "in_progress" && "Rendering"}
-                {(g.status === "failed" || g.status === "error") && (g.error ?? "Generation failed")}
-                {g.status === "nsfw" && "Rejected by content moderation. Not charged."}
-                {g.status === "canceled" && "Canceled. Not charged."}
-                {expiry?.expired && "This file expired on Higgsfield after 7 days."}
-              </p>
-            </div>
+    <motion.article
+      layout={!reduce}
+      initial={reduce ? false : { opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 380, damping: 34 }}
+      className={cn("group relative isolate overflow-hidden rounded-[16px] bg-surface-2 ring-1 ring-white/[0.06] ring-inset", tile && "aspect-[4/5]")}
+      aria-busy={active}
+    >
+      {showMedia ? (
+        <button type="button" className={cn("block w-full cursor-zoom-in overflow-hidden", tile && "h-full")} onClick={() => onOpen?.(g)} aria-label={`Open ${g.modelName} result`}>
+          <MediaPreview g={g} fill={tile} className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]" />
+        </button>
+      ) : (
+        <div className={cn("relative flex flex-col items-center justify-center pb-16", active && "shimmer", tile && "h-full")} style={tile ? undefined : { aspectRatio: aspectOf(g) }}>
+          {active && !reduce && <div aria-hidden className="pulse-glow absolute inset-0" />}
+          <div className="relative flex max-w-[85%] flex-col items-center gap-2 text-center">
+            <span className={cn("grid h-10 w-10 place-items-center rounded-full", failed ? "bg-danger-soft text-danger" : g.status === "nsfw" || expired ? "bg-warn-soft text-warn" : active ? "bg-accent-soft text-accent-text" : "bg-surface-3 text-fg-muted")}>
+              <Icon size={22} weight={g.status === "in_progress" ? "fill" : "regular"} className={cn(g.status === "in_progress" && !reduce && "animate-pulse")} aria-hidden />
+            </span>
+            <p className="line-clamp-2 text-[12px] leading-snug text-fg-muted sm:text-[13px]">
+              {expired ? "Expired on Higgsfield after 7 days" : failed ? (g.error ?? "Generation failed") : g.status === "submitting" && g.error ? `Retrying: ${g.error}` : STATUS_TEXT[g.status]}
+            </p>
+            {g.status === "queued" && onCancel && (
+              <button type="button" onClick={() => onCancel(g)} className="h-8 rounded-full bg-surface-3 px-3 text-[12px] text-fg-muted transition-colors hover:text-fg">
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Top row: what it is, and quick actions on hover */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5">
+        <div className="flex gap-1">
+          {showMedia && g.outputType === "video" && (
+            <Chip>
+              <Play size={11} weight="fill" aria-hidden /> Video
+            </Chip>
+          )}
+          {showMedia && images > 1 && (
+            <Chip>
+              <Stack size={12} aria-hidden /> {images}
+            </Chip>
+          )}
+          {expiry && !expiry.expired && expiry.urgent && (
+            <Chip tone="warn" title={expiry.label}>
+              <ClockCountdown size={12} aria-hidden /> {expiry.short}
+            </Chip>
+          )}
+        </div>
+        {showMedia && (
+          <div className="pointer-events-auto flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+            {onFavorite && (
+              <OverlayButton label={g.favorite ? "Remove from favourites" : "Add to favourites"} onClick={() => onFavorite(g)} pressed={g.favorite}>
+                <Heart size={16} weight={g.favorite ? "fill" : "regular"} className={g.favorite ? "text-accent" : ""} aria-hidden />
+              </OverlayButton>
+            )}
+            {g.outputs[0] && (
+              <OverlayButton label="Download" href={g.outputs[0].displayUrl} hideOnTouch>
+                <DownloadSimple size={16} aria-hidden />
+              </OverlayButton>
+            )}
+            {onRemix && (
+              <OverlayButton label="Remix with the same settings" onClick={() => onRemix(g)} hideOnTouch>
+                <Shuffle size={16} aria-hidden />
+              </OverlayButton>
+            )}
           </div>
         )}
-        <div className="pointer-events-none absolute top-2.5 left-2.5 flex gap-1.5">
-          <MediaBadge tone={st.tone}>{st.label}</MediaBadge>
-          {expiry && !expiry.expired && <MediaBadge tone={expiry.urgent ? "warn" : "neutral"} title={expiry.label}>{expiry.short}</MediaBadge>}
-        </div>
+        {!showMedia && !active && onRemix && (
+          <div className="pointer-events-auto">
+            <button type="button" onClick={() => onRemix(g)} aria-label="Try again with the same settings" title="Try again" className="grid h-9 w-9 place-items-center rounded-full bg-surface-3 text-fg-muted transition-colors hover:text-fg pointer-coarse:h-11 pointer-coarse:w-11">
+              <ArrowCounterClockwise size={16} aria-hidden />
+            </button>
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-2 px-3.5 py-3">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium text-fg" title={g.modelName}>{g.modelName}</p>
-          <p className="truncate text-[12px] text-fg-subtle">
-            <span className="mono">{cost}</span> · <time suppressHydrationWarning>{relativeTime(g.createdAt)}</time>
-            {g.keySource === "personal" && " · my key"}
-          </p>
+
+      {/* Bottom: model, cost and prompt on a fading scrim */}
+      <div className={cn("pointer-events-none absolute inset-x-0 bottom-0 px-3 pt-10 pb-2.5", showMedia ? "bg-gradient-to-t from-black/80 via-black/35 to-transparent text-white" : "text-fg")}>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="fade-x min-w-0 flex-1 whitespace-nowrap text-[13px] font-semibold" title={g.modelName}>{g.modelName.split(" · ")[0]}</p>
+          <p className={cn("mono shrink-0 text-[12px]", showMedia ? "text-white/75" : "text-fg-subtle")}>{cost}</p>
         </div>
-        {g.status === "queued" && onCancel && (
-          <button type="button" onClick={() => onCancel(g)} className="h-9 rounded-full px-3 text-[13px] text-fg-muted hover:bg-surface-2 hover:text-fg">Cancel</button>
-        )}
-        {onFavorite && g.status === "completed" && (
-          <button type="button" onClick={() => onFavorite(g)} aria-pressed={g.favorite} aria-label={g.favorite ? "Remove from favourites" : "Add to favourites"} className="grid h-9 w-9 place-items-center rounded-full text-fg-muted hover:bg-surface-2 hover:text-fg">
-            <Heart size={18} weight={g.favorite ? "fill" : "regular"} className={g.favorite ? "text-accent-text" : ""} aria-hidden />
-          </button>
-        )}
-        {g.status === "completed" && g.outputs[0] && (
-          <a href={g.outputs[0].displayUrl} download target="_blank" rel="noopener noreferrer" aria-label="Download" className="grid h-9 w-9 place-items-center rounded-full text-fg-muted hover:bg-surface-2 hover:text-fg">
-            <DownloadSimple size={18} aria-hidden />
-          </a>
-        )}
-        {onRemix && !active && (
-          <button type="button" onClick={() => onRemix(g)} aria-label="Remix with the same settings" title="Remix" className="grid h-9 w-9 place-items-center rounded-full text-fg-muted hover:bg-surface-2 hover:text-fg">
-            <ArrowsClockwise size={18} aria-hidden />
-          </button>
-        )}
+        {g.prompt && <p className={cn("fade-x mt-0.5 whitespace-nowrap text-[12px]", showMedia ? "text-white/70" : "text-fg-subtle")}>{g.prompt}</p>}
+        <p className={cn("mt-0.5 text-[11px]", showMedia ? "text-white/50" : "text-fg-subtle")}>
+          <time suppressHydrationWarning>{relativeTime(g.createdAt)}</time>
+          {g.keySource === "personal" && ", my key"}
+        </p>
       </div>
     </motion.article>
   );
@@ -133,12 +204,6 @@ export function JobCard({ g, onRemix, onCancel, onOpen, onFavorite }: { g: Clien
 
 export function JobSkeleton({ aspect = "1 / 1" }: { aspect?: string }) {
   return (
-    <div className="panel overflow-hidden">
-      <div className="shimmer" style={{ aspectRatio: aspect }} />
-      <div className="space-y-2 px-3.5 py-3">
-        <div className="shimmer h-3 w-2/3 rounded" />
-        <div className="shimmer h-2.5 w-1/3 rounded" />
-      </div>
-    </div>
+    <div className="shimmer rounded-[16px]" style={{ aspectRatio: aspect }} />
   );
 }

@@ -2,7 +2,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { CaretDown, CaretUp, Lightning, Sliders, SquaresFour, WarningCircle, Sparkle } from "@phosphor-icons/react";
+import { ArrowUp, CaretDown, CircleNotch, FilmSlate, ImageSquare, SlidersHorizontal, Sparkle, SquaresFour, UserFocus, WarningCircle } from "@phosphor-icons/react";
 import type { Category } from "@/lib/catalog/types";
 import { cn } from "@/lib/cn";
 import { usd } from "@/lib/format";
@@ -11,7 +11,7 @@ import { Dialog } from "@/components/dialog";
 import { Viewer } from "@/components/library/viewer";
 import { carryValues, defaultValues, FieldInput, settingsSummary } from "./fields";
 import { JobCard } from "./job-card";
-import { CategoryTabs, ModelInfo, ModelList } from "./model-picker";
+import { CategoryTabs, ModelList } from "./model-picker";
 import { isActive, type BlockReason, type CharacterOption, type ClientGeneration, type KeyOptions, type PublicModel, type Values } from "./types";
 
 type Estimate =
@@ -223,11 +223,18 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
   const summary = model ? settingsSummary(model.fields, values) : "";
   const canGenerate = !!model && !submitting && !(promptField?.required && !String(values.prompt ?? "").trim());
 
+  const characterField = mainFields.find((f) => f.kind === "character");
+  const mediaFields = mainFields.filter((f) => f.kind !== "character");
+  const TypeIcon = model?.outputType === "video" ? FilmSlate : ImageSquare;
+
   return (
-    <div className="flex min-h-[calc(100dvh-57px)] lg:h-dvh lg:min-h-0">
+    <div className="flex min-h-[calc(100dvh-57px-var(--demo-h,0px))] lg:h-[calc(100dvh-var(--demo-h,0px))] lg:min-h-0">
       {/* Model panel (desktop) */}
-      <aside className="hidden w-[300px] shrink-0 flex-col border-r border-border p-4 lg:flex" aria-label="Model panel">
-        <h1 className="mb-3 text-lg font-bold tracking-tight">Studio</h1>
+      <aside className="hidden w-[288px] shrink-0 flex-col border-r border-border px-4 pt-5 lg:flex" aria-label="Models">
+        <div className="mb-4 flex items-baseline justify-between px-1">
+          <h1 className="text-[17px] font-semibold tracking-tight">Studio</h1>
+          <span className="mono text-[12px] text-fg-subtle">{models.length} models</span>
+        </div>
         <div className="mb-3">
           <CategoryTabs value={category} onChange={setCategory} counts={counts} />
         </div>
@@ -236,23 +243,28 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
 
       {/* Canvas */}
       <section className="relative flex min-w-0 flex-1 flex-col" aria-label="Canvas">
-        <div className="flex-1 overflow-y-auto px-3 pt-4 pb-[calc(var(--composer-h,220px)+96px)] sm:px-6 lg:pt-6 lg:pb-[calc(var(--composer-h,220px)+32px)]">
-          {setupHint && <div className="mb-4"><Notice tone="warn" title="Almost ready">{setupHint}</Notice></div>}
+        <div className="fade-top flex-1 overflow-y-auto px-3 pt-4 pb-[340px] sm:px-6 lg:pt-6 lg:pb-[260px]">
+          {setupHint && <div className="mx-auto mb-4 max-w-[880px]"><Notice tone="warn" title="Almost ready">{setupHint}</Notice></div>}
           {feed.length === 0 ? (
-            <EmptyState icon={<Sparkle size={28} />} title="Your first generation starts here" body="Pick a model, describe what you want and press Generate. Results appear here and in your Library." />
+            <div className="mx-auto max-w-md pt-16">
+              <EmptyState icon={<Sparkle size={28} />} title="Nothing generated yet" body="Pick a model, describe what you want and press Generate. Results land here and in your Library." />
+            </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
               <AnimatePresence initial={false}>
                 {feed.map((g) => (
-                  <JobCard key={g.id} g={g} onRemix={remix} onCancel={cancel} onOpen={setViewing} onFavorite={favorite} />
+                  <JobCard key={g.id} g={g} onRemix={remix} onCancel={cancel} onOpen={setViewing} onFavorite={favorite} tile />
                 ))}
               </AnimatePresence>
             </div>
           )}
         </div>
 
-        {/* Composer, docked at the bottom; a bottom sheet on phones */}
-        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-30 px-2 lg:absolute lg:bottom-0 lg:px-6 lg:pb-5">
+        {/* Cards dissolve into the background behind the composer. */}
+        <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-72 bg-gradient-to-t from-bg via-bg/85 to-transparent lg:absolute lg:h-56" />
+
+        {/* Composer: docked on desktop, a bottom sheet above the tab bar on phones */}
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-30 px-2 pb-2 lg:absolute lg:bottom-0 lg:px-6 lg:pb-6">
           <motion.form
             layout={!reduce}
             transition={{ type: "spring", stiffness: 380, damping: 36 }}
@@ -260,43 +272,13 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
               e.preventDefault();
               if (canGenerate) void generate();
             }}
-            className="glass pointer-events-auto mx-auto max-w-4xl rounded-[16px] p-3 shadow-[var(--shadow)] sm:p-4"
+            className="composer pointer-events-auto mx-auto max-w-[880px]"
             aria-label="Composer"
           >
-            {model && (
-              <div className="mb-2.5 flex items-center gap-2">
-                <button type="button" onClick={() => setPickerOpen(true)} className="flex min-w-0 items-center gap-1.5 rounded-full border border-border bg-surface-2 py-1.5 pr-3 pl-3.5 text-sm font-medium lg:pointer-events-none lg:border-transparent lg:bg-transparent lg:px-0" aria-label={`Model: ${model.name}. Change model`}>
-                  <span className="truncate">{model.family}</span>
-                  <span className="hidden truncate text-fg-subtle sm:inline">· {model.workflow}</span>
-                  <CaretDown size={14} className="shrink-0 lg:hidden" aria-hidden />
-                </button>
-                <div className="hidden lg:block"><ModelInfo model={model} /></div>
-                <div className="ml-auto flex items-center gap-1">
-                  {showKeySelector && (
-                    <div role="radiogroup" aria-label="Key" className="flex rounded-full border border-border p-0.5 text-[12px]">
-                      {(["org", "personal"] as const).map((k) => (
-                        <button key={k} type="button" role="radio" aria-checked={keySource === k} onClick={() => setKeySource(k)} className={cn("h-8 rounded-full px-2.5", keySource === k ? "bg-surface-3 text-fg" : "text-fg-muted")}>
-                          {k === "org" ? "Org key" : "My key"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {(settingFields.length > 0 || advancedFields.length > 0) && (
-                    <button type="button" onClick={() => setExpanded((x) => !x)} aria-expanded={expanded} aria-controls="composer-settings" className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] text-fg-muted hover:bg-surface-2 hover:text-fg">
-                      <Sliders size={16} aria-hidden />
-                      <span className="mono hidden max-w-[220px] truncate sm:inline">{summary || "Settings"}</span>
-                      <span className="sm:hidden">Settings</span>
-                      {expanded ? <CaretDown size={14} aria-hidden /> : <CaretUp size={14} aria-hidden />}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
             <AnimatePresence initial={false}>
               {expanded && model && (
                 <motion.div id="composer-settings" initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }} animate={reduce ? { opacity: 1 } : { height: "auto", opacity: 1 }} exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 40 }} className="overflow-hidden">
-                  <div className="mb-3 max-h-[42dvh] space-y-4 overflow-y-auto border-b border-border pr-1 pb-4">
+                  <div className="fade-y max-h-[44dvh] space-y-5 overflow-y-auto px-4 pt-4 pb-5 sm:px-5">
                     <div className="grid gap-4 sm:grid-cols-2">
                       {settingFields.map((f) => (
                         <div key={f.name} className={cn(f.kind === "select" && (f.options?.length ?? 0) > 4 && "sm:col-span-2")}>
@@ -307,7 +289,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
                     {advancedFields.length > 0 && (
                       <details className="group">
                         <summary className="flex h-10 cursor-pointer list-none items-center gap-1.5 text-[13px] font-medium text-fg-muted hover:text-fg">
-                          <CaretDown size={14} className="transition-transform group-open:rotate-180" aria-hidden /> Advanced ({advancedFields.length})
+                          <CaretDown size={14} className="transition-transform group-open:rotate-180" aria-hidden /> Advanced <span className="mono text-fg-subtle">{advancedFields.length}</span>
                         </summary>
                         <div className="mt-2 grid gap-4 sm:grid-cols-2">
                           {advancedFields.map((f) => (
@@ -325,47 +307,13 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
                       </details>
                     )}
                   </div>
+                  <div className="mx-4 h-px bg-border sm:mx-5" />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {model && mainFields.length > 0 && (
-              <div className="scrollbar-none mb-2.5 flex gap-4 overflow-x-auto pb-1">
-                {mainFields.map((f) => (
-                  <div key={f.name} className={cn("shrink-0", f.kind === "character" && "w-56")}>
-                    <FieldInput field={f} value={values[f.name]} onChange={(v) => setValue(f.name, v)} error={fieldErrors[f.name]} characters={characters} maxMb={maxUploadMb} keySource={keySource} modelSlug={model.slug} />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {model && promptField && (
-              <div>
-                <label htmlFor="prompt" className="sr-only">Prompt</label>
-                <Textarea
-                  ref={promptRef}
-                  id="prompt"
-                  rows={2}
-                  maxLength={promptField.maxLength}
-                  placeholder={model.outputType === "video" ? "Describe the shot, the motion and the mood…" : "Describe what you want to see…"}
-                  value={(values.prompt as string) ?? ""}
-                  onChange={(e) => setValue("prompt", e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canGenerate) {
-                      e.preventDefault();
-                      void generate();
-                    }
-                  }}
-                  aria-invalid={!!fieldErrors.prompt}
-                  aria-describedby="cost-line"
-                  className="max-h-48 min-h-[52px] resize-none border-transparent bg-transparent px-1 text-base focus:border-transparent"
-                />
-                {fieldErrors.prompt && <p role="alert" className="px-1 text-[13px] text-danger">{fieldErrors.prompt}</p>}
-              </div>
-            )}
-
             {(submitError || blockedNow) && (
-              <div className="mt-2">
+              <div className="px-3 pt-3 sm:px-4">
                 {blockedNow ? (
                   <Notice
                     tone="warn"
@@ -384,22 +332,102 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
               </div>
             )}
 
-            <div className="mt-2 flex items-center gap-3">
-              <p id="cost-line" className="min-w-0 flex-1 truncate text-[13px] text-fg-muted" aria-live="polite">
-                {shownEstimate.state === "loading" && <span className="mono">Estimating…</span>}
+            {model && mediaFields.length > 0 && (
+              <div className="scrollbar-none flex gap-3 overflow-x-auto px-4 pt-4 sm:px-5">
+                {mediaFields.map((f) => (
+                  <div key={f.name} className="shrink-0">
+                    <FieldInput field={f} value={values[f.name]} onChange={(v) => setValue(f.name, v)} error={fieldErrors[f.name]} characters={characters} maxMb={maxUploadMb} keySource={keySource} modelSlug={model.slug} compact />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {model && promptField && (
+              <div className="px-4 pt-3 sm:px-5 sm:pt-4">
+                <label htmlFor="prompt" className="sr-only">Prompt</label>
+                <textarea
+                  ref={promptRef}
+                  id="prompt"
+                  rows={2}
+                  maxLength={promptField.maxLength}
+                  placeholder={model.outputType === "video" ? "Describe the shot, the motion and the mood" : "Describe what you want to see"}
+                  value={(values.prompt as string) ?? ""}
+                  onChange={(e) => setValue("prompt", e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canGenerate) {
+                      e.preventDefault();
+                      void generate();
+                    }
+                  }}
+                  aria-invalid={!!fieldErrors.prompt}
+                  aria-describedby="cost-line"
+                  className="prompt-input"
+                />
+                {fieldErrors.prompt && <p role="alert" className="pb-1 text-[13px] text-danger">{fieldErrors.prompt}</p>}
+              </div>
+            )}
+
+            <div className="flex items-center gap-1.5 px-2.5 pt-1 pb-2.5 sm:px-3 sm:pb-3">
+              <div className="fade-x scrollbar-none flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pr-6">
+              {model && (
+                <button type="button" onClick={() => setPickerOpen(true)} className="chip shrink-0" aria-label={`Model: ${model.name}. Change model`}>
+                  <TypeIcon size={16} className="shrink-0 text-accent-text" aria-hidden />
+                  <span className="max-w-[180px] truncate">{model.family}</span>
+                  <CaretDown size={12} className="shrink-0 text-fg-subtle" aria-hidden />
+                </button>
+              )}
+              {(settingFields.length > 0 || advancedFields.length > 0) && (
+                <button type="button" onClick={() => setExpanded((x) => !x)} aria-expanded={expanded} aria-controls="composer-settings" className={cn("chip shrink-0", expanded && "chip-on")}>
+                  <SlidersHorizontal size={16} className="shrink-0" aria-hidden />
+                  <span className="mono hidden max-w-[200px] truncate sm:inline">{summary || "Settings"}</span>
+                  <span className="sm:hidden">Settings</span>
+                </button>
+              )}
+              {characterField && (
+                <label className="chip relative shrink-0">
+                  <UserFocus size={16} className="shrink-0" aria-hidden />
+                  <span className="sr-only">Character</span>
+                  <select
+                    value={(values[characterField.name] as string) ?? ""}
+                    onChange={(e) => setValue(characterField.name, e.target.value || undefined)}
+                    className="max-w-[140px] cursor-pointer appearance-none truncate bg-transparent pr-1 outline-none"
+                  >
+                    <option value="">No character</option>
+                    {characters
+                      .filter((c) => c.modelVersion === (/soul-cinema/.test(model!.slug) ? "cinema" : /soul-2/.test(model!.slug) ? "v2" : "v1"))
+                      .map((c) => (
+                        <option key={c.id} value={c.referenceId}>{c.name}</option>
+                      ))}
+                  </select>
+                </label>
+              )}
+              {showKeySelector && (
+                <div role="radiogroup" aria-label="Key" className="flex h-9 items-center rounded-full bg-surface-2/70 p-0.5 text-[12px]">
+                  {(["org", "personal"] as const).map((k) => (
+                    <button key={k} type="button" role="radio" aria-checked={keySource === k} onClick={() => setKeySource(k)} className={cn("h-8 rounded-full px-2.5 transition-colors", keySource === k ? "bg-surface-3 text-fg" : "text-fg-muted hover:text-fg")}>
+                      {k === "org" ? "Org key" : "My key"}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              </div>
+              <p id="cost-line" className="flex shrink-0 items-center gap-2 px-1.5 text-[13px] text-fg-muted" aria-live="polite">
+                {shownEstimate.state === "loading" && <span className="mono text-fg-subtle">Estimating</span>}
                 {shownEstimate.state === "ok" && (
                   <>
                     <span className="mono text-fg">{shownEstimate.costUnknown ? "Cost unknown" : `≈ ${usd(shownEstimate.usd, { precise: true })}`}</span>
-                    {shownEstimate.remainingUsd !== null && <span className="mono"> · {usd(Math.max(0, shownEstimate.remainingUsd))} left this month</span>}
+                    {shownEstimate.remainingUsd !== null && <span className="mono hidden text-fg-subtle md:inline">{usd(Math.max(0, shownEstimate.remainingUsd))} left</span>}
                   </>
                 )}
-                {shownEstimate.state === "idle" && (remainingUsd !== null ? <span className="mono">{usd(Math.max(0, remainingUsd))} left this month</span> : <span>Estimates are shown before you generate</span>)}
-                {shownEstimate.state === "blocked" && <span className="text-warn"><WarningCircle size={14} className="mr-1 inline" aria-hidden />Would be blocked</span>}
-                {shownEstimate.state === "error" && <span className="text-warn">{shownEstimate.message}</span>}
+                {shownEstimate.state === "idle" && remainingUsd !== null && <span className="mono hidden text-fg-subtle md:inline">{usd(Math.max(0, remainingUsd))} left this month</span>}
+                {shownEstimate.state === "blocked" && <span className="inline-flex items-center gap-1 text-warn"><WarningCircle size={14} aria-hidden />Over budget</span>}
+                {shownEstimate.state === "error" && <span className="hidden max-w-[220px] truncate text-warn sm:inline" title={shownEstimate.message}>{shownEstimate.message}</span>}
               </p>
-              <Button type="submit" variant="primary" size="md" disabled={!canGenerate} className="shrink-0">
-                <Lightning size={18} weight="fill" aria-hidden /> {submitting ? "Sending…" : "Generate"}
-              </Button>
+              <button type="submit" disabled={!canGenerate} className="generate-btn" aria-label={submitting ? "Sending" : "Generate"}>
+                {submitting ? <CircleNotch size={18} className="animate-spin" aria-hidden /> : <ArrowUp size={18} weight="bold" aria-hidden />}
+                <span className="hidden sm:inline">{submitting ? "Sending" : "Generate"}</span>
+              </button>
             </div>
           </motion.form>
         </div>

@@ -98,7 +98,7 @@ export default async function MembersPage() {
                   {m.suspendedAt && <Badge tone="warn" className="mt-1">Suspended</Badge>}
                 </Td>
                 <Td><RoleSelect memberId={m.id} role={m.role} canEdit={canEdit} isOwnerViewer={isOwner} /></Td>
-                <Td className="text-[13px] text-fg-muted">{memberships.filter((tm) => tm.memberId === m.id).map((tm) => teamName.get(tm.teamId)).filter(Boolean).join(", ") || "—"}</Td>
+                <Td className="text-[13px] text-fg-muted">{memberships.filter((tm) => tm.memberId === m.id).map((tm) => teamName.get(tm.teamId)).filter(Boolean).join(", ") || "-"}</Td>
                 <Td className="text-right">
                   <Link href={`/admin/analytics?member=${m.id}`} className="mono hover:underline">{usd(u?.spend ?? 0)}</Link>
                   <p className="text-[12px] text-fg-subtle">{Number(u?.count ?? 0)} jobs{u?.last ? ` · ${relativeTime(u.last)}` : ""}</p>

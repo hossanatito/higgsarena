@@ -57,7 +57,7 @@ export function ModelTable({ rows: initial }: { rows: Row[] }) {
                 </div>
               </Td>
               <Td className="text-fg-muted">{CATEGORY_LABELS[r.category]}</Td>
-              <Td className="mono text-right text-fg-muted">{r.avgEstimateUsd !== null ? `${usd(r.avgEstimateUsd, { precise: true })}` : "—"}{r.count ? <span className="text-fg-subtle"> · {r.count}×</span> : null}</Td>
+              <Td className="mono text-right text-fg-muted">{r.avgEstimateUsd !== null ? `${usd(r.avgEstimateUsd, { precise: true })}` : "-"}{r.count ? <span className="text-fg-subtle"> · {r.count}×</span> : null}</Td>
               <Td><Switch id={`en-${r.slug}`} label={`Enable ${r.name}`} checked={r.enabled} onChange={(v) => flip(r.slug, "enabled", v)} /></Td>
               <Td><Switch id={`ft-${r.slug}`} label={`Feature ${r.name}`} checked={r.featured} onChange={(v) => flip(r.slug, "featured", v)} /></Td>
             </tr>

@@ -51,8 +51,7 @@ function svg(seedText: string, w: number, h: number): string {
   let hash = 0;
   for (const c of seedText) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
   const hue = hash % 360;
-  const label = seedText.slice(0, 40).replace(/[<>&"]/g, "");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue},70%,55%)"/><stop offset="1" stop-color="hsl(${(hue + 80) % 360},70%,25%)"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="${w * 0.7}" cy="${h * 0.35}" r="${Math.min(w, h) * 0.18}" fill="rgba(255,255,255,0.35)"/><text x="24" y="${h - 28}" font-family="sans-serif" font-size="${Math.round(Math.min(w, h) / 18)}" fill="white">${label}</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue},70%,55%)"/><stop offset="1" stop-color="hsl(${(hue + 80) % 360},70%,25%)"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="${w * 0.7}" cy="${h * 0.35}" r="${Math.min(w, h) * 0.18}" fill="rgba(255,255,255,0.35)"/></svg>`;
 }
 
 function dims(ar: unknown): [number, number] {

@@ -201,6 +201,121 @@ kbd {
   border-radius: var(--radius-panel);
 }
 
+/* Composer: one soft surface. The prompt has no border of its own; focus
+   is shown as a gentle glow on the whole composer. (Frosted-glass web
+   approximation; solid fallback below for reduced transparency.) */
+.composer {
+  position: relative;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: saturate(170%) blur(24px);
+  backdrop-filter: saturate(170%) blur(24px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 24px 64px -12px rgb(0 0 0 / 0.55);
+  transition: box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--glass-border));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 4px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 24px 64px -12px rgb(0 0 0 / 0.55);
+}
+:root[data-theme="light"] .composer {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 20px 50px -16px rgb(24 24 32 / 0.22);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .composer {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 20px 50px -16px rgb(24 24 32 / 0.22);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .composer {
+    background: var(--bg-elevated);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+.prompt-input {
+  display: block;
+  width: 100%;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font-size: 16px;
+  line-height: 1.55;
+  min-height: 52px;
+  max-height: 200px;
+  field-sizing: content;
+  padding: 2px 0;
+}
+.prompt-input::placeholder {
+  color: var(--fg-subtle);
+}
+.prompt-input:focus,
+.prompt-input:focus-visible {
+  outline: none;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  transition: background-color 0.2s, color 0.2s, transform 0.15s;
+}
+.chip:hover {
+  color: var(--fg);
+  background: var(--surface-3);
+}
+.chip:active {
+  transform: scale(0.98);
+}
+.chip-on {
+  color: var(--fg);
+  background: var(--surface-3);
+}
+.generate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 16px 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  transition: background-color 0.2s, transform 0.15s, opacity 0.2s;
+}
+.generate-btn:hover {
+  background: var(--accent-hover);
+}
+.generate-btn:active {
+  transform: scale(0.97);
+}
+.generate-btn:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+@media (max-width: 639px) {
+  .generate-btn {
+    padding: 0;
+    width: 40px;
+  }
+}
+
 /* Shimmer skeletons while jobs render. */
 .shimmer {
   position: relative;
@@ -218,10 +333,57 @@ kbd {
 :root[data-theme="light"] .shimmer::after {
   background: linear-gradient(90deg, transparent, rgb(0 0 0 / 0.05), transparent);
 }
+/* Soft accent breathing behind rendering jobs. */
+.pulse-glow {
+  background: radial-gradient(60% 50% at 50% 55%, var(--accent-soft), transparent 70%);
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
   }
+}
+
+/* App shell: collapsible sidebar on desktop. */
+.sidebar {
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.shell-main {
+  transition: padding-left 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (min-width: 1024px) {
+  #app-shell[data-sidebar="open"] .shell-main {
+    padding-left: 248px;
+  }
+  #app-shell[data-sidebar="collapsed"] .shell-main {
+    padding-left: 72px;
+  }
+}
+
+/* Fade overlays: text and scroll edges dissolve instead of hard-cutting. */
+/* Use on elements that fill their container (block or flex-1), so short
+   text never reaches the faded edge. */
+.fade-x {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.fade-y {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 28px), transparent);
+}
+.fade-top {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px);
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
 }
 
 .safe-bottom {
