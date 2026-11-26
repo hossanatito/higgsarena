@@ -6,9 +6,9 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type Size = "sm" | "md" | "lg" | "icon";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-accent-fg hover:bg-accent-hover font-semibold",
-  secondary: "bg-surface-2 text-fg hover:bg-surface-3 border border-border",
-  outline: "border border-border-strong text-fg hover:bg-surface-2",
+  primary: "bg-accent text-accent-fg hover:bg-accent-hover font-semibold disabled:bg-surface-3 disabled:text-fg-subtle disabled:opacity-100",
+  secondary: "bg-surface-2 text-fg hover:bg-surface-3",
+  outline: "border border-border text-fg hover:bg-surface-2 hover:border-border-strong",
   ghost: "text-fg-muted hover:text-fg hover:bg-surface-2",
   danger: "bg-danger-soft text-danger hover:bg-danger/20 border border-danger/30",
 };
@@ -37,8 +37,7 @@ export function LinkButton({ variant = "secondary", size = "md", className, ...p
   return <Link className={buttonClass(variant, size, className)} {...props} />;
 }
 
-const inputBase =
-  "w-full rounded-[10px] border border-border bg-bg-elevated px-3.5 text-[15px] text-fg placeholder:text-fg-subtle transition-colors focus:border-accent-text focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-1 aria-[invalid=true]:border-danger";
+const inputBase = "field w-full rounded-[12px] px-3.5 text-[15px] text-fg placeholder:text-fg-subtle transition-[background-color,border-color,box-shadow] duration-150";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(inputBase, "h-11", className)} {...props} />;
@@ -116,8 +115,8 @@ export function PageHeader({ title, description, actions }: { title: ReactNode; 
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-[28px]">{title}</h1>
-        {description && <p className="mt-1 text-[15px] text-fg-muted">{description}</p>}
+        <h1 className="text-2xl font-semibold tracking-tight text-fg sm:text-[28px]">{title}</h1>
+        {description && <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-fg-muted">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -126,9 +125,9 @@ export function PageHeader({ title, description, actions }: { title: ReactNode; 
 
 export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "warn" | "danger" | "ok" }) {
   return (
-    <div className="panel p-4">
+    <div className="panel p-5">
       <p className="text-[13px] font-medium text-fg-muted">{label}</p>
-      <p className={cn("mono mt-1.5 text-2xl font-semibold tracking-tight", tone === "danger" ? "text-danger" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-fg")}>{value}</p>
+      <p className={cn("mono mt-2 text-[26px] leading-none font-semibold tracking-tight", tone === "danger" ? "text-danger" : tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : "text-fg")}>{value}</p>
       {sub && <p className="mt-1 text-[13px] text-fg-subtle">{sub}</p>}
     </div>
   );
@@ -152,20 +151,20 @@ export function Notice({ tone = "info", title, children, action }: { tone?: "inf
 export function Table({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn("panel overflow-x-auto", className)}>
-      <table className="w-full min-w-[560px] border-collapse text-left text-sm">{children}</table>
+      <table className="data-table w-full min-w-[560px] border-collapse text-left text-sm">{children}</table>
     </div>
   );
 }
 export function Th({ children, className, ...props }: ComponentProps<"th">) {
   return (
-    <th scope="col" className={cn("border-b border-border px-4 py-3 text-[13px] font-medium text-fg-muted", className)} {...props}>
+    <th scope="col" className={cn("border-b border-border px-4 py-2.5 text-[12px] font-medium text-fg-subtle first:rounded-tl-[16px] last:rounded-tr-[16px]", className)} {...props}>
       {children}
     </th>
   );
 }
 export function Td({ children, className, ...props }: ComponentProps<"td">) {
   return (
-    <td className={cn("border-b border-border px-4 py-3 align-middle text-fg last:border-0 [tr:last-child_&]:border-0", className)} {...props}>
+    <td className={cn("border-b border-border px-4 py-3 align-middle text-fg [tr:last-child_&]:border-0", className)} {...props}>
       {children}
     </td>
   );

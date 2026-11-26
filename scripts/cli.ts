@@ -23,7 +23,7 @@ async function main() {
     throw e;
   }
   if (cmd === "boot") {
-    await runMigrations(process.env.DATABASE_URL, path.resolve(process.cwd(), "drizzle"));
+    await runMigrations(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL, path.resolve(process.cwd(), "drizzle"));
     console.log("[boot] migrations applied");
     await seed();
     process.exit(0);

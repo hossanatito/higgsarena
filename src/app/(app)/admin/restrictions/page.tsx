@@ -83,11 +83,11 @@ export default async function RestrictionsPage({ searchParams }: { searchParams:
                   <NumberField name="maxBatchSize" label="Max batch size" suffix="outputs per run" value={current?.maxBatchSize} />
                   <NumberField name="maxUploadMb" label="Max upload size" suffix="MB" value={current?.maxUploadMb} hint="Default 50 MB when no level sets one." />
                 </div>
-                <label className="mt-5 flex items-start gap-3 rounded-[12px] border border-border p-3">
+                <label className="mt-5 flex items-start gap-3 rounded-[12px] bg-surface-2 p-3">
                   <input type="checkbox" name="paused" defaultChecked={current?.paused} className="mt-1 h-4 w-4 accent-[var(--accent)]" />
                   <span><span className="text-sm font-medium">Pause generation</span><span className="block text-[13px] text-fg-subtle">Block all new jobs at this level, for example during a review.</span></span>
                 </label>
-                <details className="mt-4 rounded-[12px] border border-border p-3" open={!!current?.allowedModels}>
+                <details className="mt-4 rounded-[12px] bg-surface-2 p-3" open={!!current?.allowedModels}>
                   <summary className="cursor-pointer text-sm font-medium">Allowed models {current?.allowedModels ? <span className="mono text-fg-subtle">({current.allowedModels.length})</span> : <span className="font-normal text-fg-subtle">· all enabled models</span>}</summary>
                   <label className="mt-3 flex items-center gap-2 text-sm">
                     <input type="checkbox" name="restrictModels" defaultChecked={!!current?.allowedModels} className="h-4 w-4 accent-[var(--accent)]" /> Only allow the models checked below

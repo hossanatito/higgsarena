@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
-import { ArrowSquareOut } from "@phosphor-icons/react";
+import { ArrowSquareOut, Star } from "@phosphor-icons/react";
 import { Badge, Input, Table, Td, Th } from "@/components/ui";
 import { Switch } from "@/components/studio/fields";
 import { CATEGORY_LABELS, type Category } from "@/lib/catalog/types";
@@ -40,7 +40,7 @@ export function ModelTable({ rows: initial }: { rows: Row[] }) {
       </div>
       <p className="mb-3 text-[13px] text-fg-muted" role="status">{msg ?? `${rows.filter((r) => r.enabled).length} of ${rows.length} enabled. Disabled models disappear from every picker and the server rejects them.`}</p>
       <Table>
-        <thead><tr><Th>Model</Th><Th>Category</Th><Th className="text-right">Avg estimate</Th><Th>Enabled</Th><Th>Featured</Th></tr></thead>
+        <thead><tr><Th>Model</Th><Th>Category</Th><Th className="text-right">Avg estimate</Th><Th>Enabled</Th><Th className="text-center">Featured</Th></tr></thead>
         <tbody>
           {list.map((r) => (
             <tr key={r.slug}>
@@ -59,7 +59,11 @@ export function ModelTable({ rows: initial }: { rows: Row[] }) {
               <Td className="text-fg-muted">{CATEGORY_LABELS[r.category]}</Td>
               <Td className="mono text-right text-fg-muted">{r.avgEstimateUsd !== null ? `${usd(r.avgEstimateUsd, { precise: true })}` : "-"}{r.count ? <span className="text-fg-subtle"> · {r.count}×</span> : null}</Td>
               <Td><Switch id={`en-${r.slug}`} label={`Enable ${r.name}`} checked={r.enabled} onChange={(v) => flip(r.slug, "enabled", v)} /></Td>
-              <Td><Switch id={`ft-${r.slug}`} label={`Feature ${r.name}`} checked={r.featured} onChange={(v) => flip(r.slug, "featured", v)} /></Td>
+              <Td className="text-center">
+                <button type="button" aria-pressed={r.featured} aria-label={`Feature ${r.name}`} title={r.featured ? "Featured at the top of the picker" : "Feature at the top of the picker"} onClick={() => flip(r.slug, "featured", !r.featured)} className={`grid h-9 w-9 place-items-center rounded-full transition-colors hover:bg-surface-2 ${r.featured ? "text-accent-text" : "text-fg-subtle hover:text-fg"}`}>
+                  <Star size={18} weight={r.featured ? "fill" : "regular"} aria-hidden />
+                </button>
+              </Td>
             </tr>
           ))}
         </tbody>

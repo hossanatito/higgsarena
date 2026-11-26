@@ -21,7 +21,7 @@ export default async function KeysPage() {
           <h2 className="font-semibold">Organization key</h2>
           {cred ? (
             <div className="mt-4 grid gap-3">
-              <div className="flex flex-wrap items-center gap-3 rounded-[12px] border border-border px-4 py-3">
+              <div className="flex flex-wrap items-center gap-3 rounded-[12px] bg-surface-2 px-4 py-3">
                 <span className="mono text-sm">{cred.keyHint}</span>
                 {cred.lastError ? <Badge tone="danger">Problem</Badge> : cred.lastVerifiedAt ? <Badge tone="ok">Verified {relativeTime(cred.lastVerifiedAt)}</Badge> : <Badge>Not tested yet</Badge>}
                 <span className="text-[12px] text-fg-subtle">Last used {cred.lastUsedAt ? dateTime(cred.lastUsedAt) : "never"} · updated {dateTime(cred.updatedAt)}</span>

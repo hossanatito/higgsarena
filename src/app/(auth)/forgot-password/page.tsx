@@ -5,7 +5,7 @@ export const metadata = { title: "Forgot password" };
 
 export default function ForgotPage() {
   return (
-    <div className="panel p-6 sm:p-8">
+    <div className="auth-card">
       <h1 className="text-2xl font-bold tracking-tight">Reset your password</h1>
       <p className="mt-1 mb-6 text-[15px] text-fg-muted">We'll email you a link that works for one hour.</p>
       <ForgotForm />

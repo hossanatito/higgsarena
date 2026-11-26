@@ -84,7 +84,7 @@ export default async function MembersPage() {
 
       <h2 className="mb-3 font-semibold">Members <span className="mono text-fg-subtle">{members.length}</span></h2>
       <Table>
-        <thead><tr><Th>Person</Th><Th>Role</Th><Th>Teams</Th><Th className="text-right">This month</Th><Th className="text-right">Actions</Th></tr></thead>
+        <thead><tr><Th>Person</Th><Th>Role</Th><Th>Teams</Th><Th className="text-right">This month</Th><Th className="w-14"><span className="sr-only">Actions</span></Th></tr></thead>
         <tbody>
           {members.map(({ m, email, name, verified }) => {
             const u = usageBy.get(m.id);
@@ -93,9 +93,13 @@ export default async function MembersPage() {
             return (
               <tr key={m.id} className={m.suspendedAt ? "opacity-60" : undefined}>
                 <Td>
-                  <p className="font-medium">{name || email}{self && <span className="ml-1.5 text-[12px] text-fg-subtle">(you)</span>}</p>
-                  <p className="text-[12px] text-fg-subtle">{email}{!verified && " · unverified"}</p>
-                  {m.suspendedAt && <Badge tone="warn" className="mt-1">Suspended</Badge>}
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-3 text-[12px] font-semibold text-fg-muted">{(name || email).split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("")}</span>
+                    <div className="min-w-0">
+                      <p className="font-medium">{name || email}{self && <span className="ml-1.5 text-[12px] font-normal text-fg-subtle">You</span>}{m.suspendedAt && <Badge tone="warn" className="ml-2">Suspended</Badge>}</p>
+                      <p className="text-[12px] text-fg-subtle">{email}{!verified && " · unverified"}</p>
+                    </div>
+                  </div>
                 </Td>
                 <Td><RoleSelect memberId={m.id} role={m.role} canEdit={canEdit} isOwnerViewer={isOwner} /></Td>
                 <Td className="text-[13px] text-fg-muted">{memberships.filter((tm) => tm.memberId === m.id).map((tm) => teamName.get(tm.teamId)).filter(Boolean).join(", ") || "-"}</Td>

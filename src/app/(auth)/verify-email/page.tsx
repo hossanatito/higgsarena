@@ -11,7 +11,7 @@ export default async function VerifyPage() {
   if (ctx.state === "ok") redirect("/studio");
   const email = ctx.user.email;
   return (
-    <div className="panel p-6 text-center sm:p-8">
+    <div className="auth-card text-center">
       <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-accent-soft text-accent-text">
         <EnvelopeSimple size={28} aria-hidden />
       </div>

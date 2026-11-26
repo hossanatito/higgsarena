@@ -22,7 +22,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
         ? `Sign-up is open to ${signup.domains.map((d) => `@${d.replace(/^@/, "")}`).join(", ")} addresses.`
         : undefined;
   return (
-    <div className="panel p-6 sm:p-8">
+    <div className="auth-card">
       <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
       <p className="mt-1 mb-6 text-[15px] text-fg-muted">Generate images and video with your team's Higgsfield models.</p>
       <SocialButtons google={social.google} github={social.github} next={next} />

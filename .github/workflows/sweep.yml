@@ -1,0 +1,24 @@
+name: Sweep (optional external cron)
+
+# Only for hosts without a per-minute scheduler (for example Vercel Hobby).
+# Turn it on by adding the repository variable SWEEP_URL
+# (https://your-app/api/cron/sweep) and the secret CRON_SECRET.
+# GitHub runs scheduled workflows every 5 minutes at best, sometimes later.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  sweep:
+    if: vars.SWEEP_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Call the sweep endpoint
+        env:
+          SWEEP_URL: ${{ vars.SWEEP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: curl -fsS --max-time 290 -H "Authorization: Bearer $CRON_SECRET" "$SWEEP_URL"

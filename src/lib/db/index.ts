@@ -9,7 +9,9 @@ type DB = ReturnType<typeof drizzle<typeof schema>>;
 const globalForDb = globalThis as unknown as { __hfDb?: DB; __hfSql?: postgres.Sql };
 
 function create(): DB {
-  const client = postgres(getEnv().DATABASE_URL, { max: 10, prepare: false });
+  const env = getEnv();
+  // prepare: false keeps it compatible with PgBouncer-style poolers (Neon, Supabase).
+  const client = postgres(env.DATABASE_URL, { max: env.DATABASE_POOL_MAX, prepare: false });
   globalForDb.__hfSql = client;
   return drizzle(client, { schema, casing: "snake_case" });
 }

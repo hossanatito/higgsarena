@@ -47,7 +47,7 @@ export default async function AdminOverview() {
         <Card className="mb-6 p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-semibold">Finish setting up</h2>
+              <h2 className="font-semibold">Finish setting up <span className="mono ml-1 text-[13px] font-normal text-fg-subtle">{checklist.filter((c) => c.done).length}/{checklist.length}</span></h2>
               <p className="text-[13px] text-fg-subtle">A few steps before your team starts generating.</p>
             </div>
             <ActionButton run={dismissSetup} variant="ghost">Hide</ActionButton>
@@ -55,7 +55,7 @@ export default async function AdminOverview() {
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {checklist.map((c) => (
               <li key={c.label}>
-                <Link href={c.href} className="flex items-center gap-3 rounded-[12px] border border-border px-4 py-3 text-sm hover:bg-surface-2">
+                <Link href={c.href} className="flex items-center gap-3 rounded-[12px] bg-surface-2 px-4 py-3 text-sm transition-colors hover:bg-surface-3">
                   {c.done ? <CheckCircle size={20} weight="fill" className="text-ok" aria-label="Done" /> : <Circle size={20} className="text-fg-subtle" aria-label="To do" />}
                   <span className={c.done ? "text-fg-muted line-through" : "text-fg"}>{c.label}</span>
                 </Link>
@@ -89,7 +89,7 @@ export default async function AdminOverview() {
           ) : (
             <ul className="grid gap-2">
               {pending.map(({ o, email }) => (
-                <li key={o.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-border px-4 py-3 text-sm">
+                <li key={o.id} className="flex items-center justify-between gap-3 rounded-[12px] bg-surface-2 px-4 py-3 text-sm">
                   <span className="min-w-0 truncate">{email} · {o.modelSlug}</span>
                   <span className="mono shrink-0">{usd(o.amountUsd)}</span>
                 </li>
@@ -104,7 +104,7 @@ export default async function AdminOverview() {
           ) : (
             <ul className="grid gap-2">
               {live.map(({ g, email }) => (
-                <li key={g.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-border px-4 py-3 text-sm">
+                <li key={g.id} className="flex items-center justify-between gap-3 rounded-[12px] bg-surface-2 px-4 py-3 text-sm">
                   <span className="min-w-0 truncate">{g.modelName} <span className="text-fg-subtle">· {email}</span></span>
                   <span className="flex shrink-0 items-center gap-2"><Badge tone={g.status === "in_progress" ? "accent" : "neutral"}>{g.status.replace("_", " ")}</Badge><span className="text-[12px] text-fg-subtle" title={dateTime(g.createdAt)}>{relativeTime(g.createdAt)}</span></span>
                 </li>

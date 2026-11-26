@@ -7,7 +7,7 @@ export const metadata = { title: "Choose a new password" };
 export default async function ResetPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const { token, error } = await searchParams;
   return (
-    <div className="panel p-6 sm:p-8">
+    <div className="auth-card">
       <h1 className="text-2xl font-bold tracking-tight">Choose a new password</h1>
       <div className="mt-6">
         {!token || error ? (

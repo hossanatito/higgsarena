@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import type { Role } from "@/lib/db/schema";
 import { Select } from "@/components/ui";
 import { ActionButton, ResultMessage } from "./action-ui";
+import { RowMenu, type RowMenuItem } from "@/components/row-menu";
 import { changeRole, removeMember, resendInvite, revokeInvite, setSuspended, transferOwnership, type ActionResult } from "@/app/(app)/admin/actions";
 
 export function RoleSelect({ memberId, role, canEdit, isOwnerViewer }: { memberId: string; role: Role; canEdit: boolean; isOwnerViewer: boolean }) {
@@ -27,14 +28,14 @@ export function RoleSelect({ memberId, role, canEdit, isOwnerViewer }: { memberI
 export function MemberActions({ memberId, suspended, canEdit, canTransfer }: { memberId: string; suspended: boolean; canEdit: boolean; canTransfer: boolean }) {
   const router = useRouter();
   if (!canEdit) return null;
-  const done = () => router.refresh();
-  return (
-    <div className="flex flex-wrap justify-end gap-1">
-      <ActionButton variant="ghost" run={() => setSuspended(memberId, !suspended)} onDone={done} confirm={suspended ? undefined : "Suspend and sign out?"}>{suspended ? "Reactivate" : "Suspend"}</ActionButton>
-      <ActionButton variant="ghost" run={() => removeMember(memberId)} onDone={done} confirm="Remove from the studio?">Remove</ActionButton>
-      {canTransfer && <ActionButton variant="ghost" run={() => transferOwnership(memberId)} onDone={done} confirm="Make them owner? You become admin.">Make owner</ActionButton>}
-    </div>
-  );
+  const items: RowMenuItem[] = [
+    suspended
+      ? { label: "Reactivate", run: () => setSuspended(memberId, false) }
+      : { label: "Suspend", run: () => setSuspended(memberId, true), confirm: "Suspend this person and sign them out everywhere?" },
+    ...(canTransfer ? [{ label: "Make owner", run: () => transferOwnership(memberId), confirm: "Make them the owner? You become an admin." }] : []),
+    { label: "Remove from studio", run: () => removeMember(memberId), confirm: "Remove them from the studio? Their results stay in the library.", danger: true },
+  ];
+  return <RowMenu label="Member actions" items={items} onDone={() => router.refresh()} />;
 }
 
 export function InviteActions({ id }: { id: string }) {

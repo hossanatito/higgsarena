@@ -4,9 +4,9 @@ import { headers } from "next/headers";
 import { getPersonalCredentialRow, summarise } from "@/lib/credentials";
 import { budgetUsage, effectiveFor, usageFor, spendForScope } from "@/lib/policy/load";
 import { Page } from "@/components/page";
-import { Card, PageHeader, Badge } from "@/components/ui";
+import { PageHeader, Badge } from "@/components/ui";
 import { usd, dateTime } from "@/lib/format";
-import { AccountSection, PersonalKeySection, NotifySection } from "@/components/settings/sections";
+import { AccountSection, PersonalKeySection, NotifySection, Section } from "@/components/settings/sections";
 
 export const metadata = { title: "Settings" };
 
@@ -21,26 +21,34 @@ export default async function SettingsPage() {
   const myOrgSpend = await spendForScope("member", ctx.member.id, ctx.org.id);
   const personal = ctx.org.settings.personalKeysAllowed ? await getPersonalCredentialRow(ctx.org.id, ctx.user.id) : undefined;
   const social = enabledSocialProviders();
+  const hasPassword = accounts.some((a) => a.providerId === "credential");
+  const nav: [string, string][] = [
+    ["usage", "Usage"],
+    ["profile", "Profile"],
+    ...(hasPassword ? [["password", "Password"] as [string, string]] : []),
+    ...(social.google || social.github || accounts.some((a) => a.providerId !== "credential") ? [["accounts", "Connected accounts"] as [string, string]] : []),
+    ["sessions", "Sessions"],
+    ...(ctx.org.settings.personalKeysAllowed ? [["key", "My key"] as [string, string]] : []),
+    ["notifications", "Notifications"],
+  ];
 
   return (
     <Page>
       <PageHeader title="Settings" description={`Signed in as ${ctx.user.email} · ${ctx.role}`} />
-      <div className="grid gap-6">
-        <AccountSection
-          user={{ name: ctx.user.name, email: ctx.user.email }}
-          hasPassword={accounts.some((a) => a.providerId === "credential")}
-          accounts={accounts.map((a) => ({ providerId: a.providerId, accountId: a.accountId }))}
-          social={social}
-          sessions={sessions.map((s) => ({ id: s.id, token: s.token, current: s.id === ctx.sessionId, userAgent: s.userAgent ?? null, ipAddress: s.ipAddress ?? null, updatedAt: (s.updatedAt as Date).toISOString() }))}
-        />
-
-        <Card className="p-5 sm:p-6">
-          <h2 className="font-semibold">Usage this month</h2>
-          <p className="mt-1 text-[13px] text-fg-subtle">Estimates for jobs on the organization key. Personal-key jobs don't count toward budgets.</p>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[12px] bg-surface-2 p-3"><dt className="text-[13px] text-fg-muted">My spend</dt><dd className="mono mt-1 text-xl font-semibold">{usd(myOrgSpend)}</dd></div>
-            <div className="rounded-[12px] bg-surface-2 p-3"><dt className="text-[13px] text-fg-muted">Generations today</dt><dd className="mono mt-1 text-xl font-semibold">{usage.generationsToday}{eff.dailyGenerationLimit ? <span className="text-fg-subtle"> / {eff.dailyGenerationLimit.value}</span> : null}</dd></div>
-            <div className="rounded-[12px] bg-surface-2 p-3"><dt className="text-[13px] text-fg-muted">Running now</dt><dd className="mono mt-1 text-xl font-semibold">{usage.activeJobs}{eff.maxConcurrentJobs ? <span className="text-fg-subtle"> / {eff.maxConcurrentJobs.value}</span> : null}</dd></div>
+      <div className="grid gap-8 lg:grid-cols-[180px_minmax(0,1fr)]">
+        <nav aria-label="Settings sections" className="hidden lg:block">
+          <ul className="sticky top-10 grid gap-0.5 text-[14px]">
+            {nav.map(([id, label]) => (
+              <li key={id}><a href={`#${id}`} className="flex h-9 items-center rounded-[10px] px-3 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg">{label}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <div className="grid min-w-0 gap-4">
+        <Section id="usage" title="Usage this month" description="Estimates for jobs on the organization key. Personal-key jobs don't count toward budgets.">
+          <dl className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[12px] bg-surface-2 p-4"><dt className="text-[13px] text-fg-muted">My spend</dt><dd className="mono mt-1 text-xl font-semibold">{usd(myOrgSpend)}</dd></div>
+            <div className="rounded-[12px] bg-surface-2 p-4"><dt className="text-[13px] text-fg-muted">Generations today</dt><dd className="mono mt-1 text-xl font-semibold">{usage.generationsToday}{eff.dailyGenerationLimit ? <span className="text-fg-subtle"> / {eff.dailyGenerationLimit.value}</span> : null}</dd></div>
+            <div className="rounded-[12px] bg-surface-2 p-4"><dt className="text-[13px] text-fg-muted">Running now</dt><dd className="mono mt-1 text-xl font-semibold">{usage.activeJobs}{eff.maxConcurrentJobs ? <span className="text-fg-subtle"> / {eff.maxConcurrentJobs.value}</span> : null}</dd></div>
           </dl>
           {budgets.length > 0 && (
             <ul className="mt-4 grid gap-3">
@@ -67,10 +75,19 @@ export default async function SettingsPage() {
             {eff.maxUploadMb && <Badge>Uploads up to {eff.maxUploadMb.value} MB</Badge>}
             {eff.allowedModels && <Badge>{eff.allowedModels.value.size} allowed models</Badge>}
           </div>
-        </Card>
+        </Section>
+        <AccountSection
+          user={{ name: ctx.user.name, email: ctx.user.email }}
+          hasPassword={hasPassword}
+          accounts={accounts.map((a) => ({ providerId: a.providerId, accountId: a.accountId }))}
+          social={social}
+          sessions={sessions.map((s) => ({ id: s.id, token: s.token, current: s.id === ctx.sessionId, userAgent: s.userAgent ?? null, ipAddress: s.ipAddress ?? null, updatedAt: (s.updatedAt as Date).toISOString() }))}
+        />
+
 
         {ctx.org.settings.personalKeysAllowed && <PersonalKeySection credential={personal ? { ...summarise(personal), lastVerifiedAt: personal.lastVerifiedAt ? dateTime(personal.lastVerifiedAt) : null } : null} />}
         <NotifySection value={ctx.member.notifyOnFinish} />
+        </div>
       </div>
     </Page>
   );

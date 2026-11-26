@@ -15,7 +15,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const org = await getOrg();
   if (!invite || invite.organizationId !== org.id) {
     return (
-      <div className="panel p-6 sm:p-8">
+      <div className="auth-card">
         <Notice tone="danger" title="This invitation link isn't valid">Ask the person who invited you to send a new one.</Notice>
       </div>
     );
@@ -23,7 +23,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const state = invitationState(invite);
   if (state !== "valid") {
     return (
-      <div className="panel p-6 sm:p-8">
+      <div className="auth-card">
         <Notice tone="warn" title={state === "accepted" ? "This invitation was already used" : state === "revoked" ? "This invitation was revoked" : "This invitation has expired"}>
           {state === "accepted" ? "Sign in to continue." : "Ask an admin to send you a new invitation."}
         </Notice>
@@ -43,7 +43,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       redirect("/studio");
     }
     return (
-      <div className="panel p-6 sm:p-8">
+      <div className="auth-card">
         <Notice tone="warn" title="Wrong account">
           This invitation is for <strong>{invite.email}</strong>, but you're signed in as <strong>{session.user.email}</strong>. Sign out and sign in with the invited address.
         </Notice>
@@ -52,7 +52,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
     );
   }
   return (
-    <div className="panel p-6 text-center sm:p-8">
+    <div className="auth-card text-center">
       <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-accent-soft text-accent-text">
         <UsersThree size={28} aria-hidden />
       </div>

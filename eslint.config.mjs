@@ -1,7 +1,7 @@
 import next from "eslint-config-next";
 
 const config = [
-  { ignores: [".next/**", "node_modules/**", "drizzle/**", "next-env.d.ts"] },
+  { ignores: [".next/**", "node_modules/**", "drizzle/**", "dist/**", "next-env.d.ts"] },
   ...next,
   {
     // Async Server Components render once per request; Date.now() there is fine.

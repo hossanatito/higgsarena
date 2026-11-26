@@ -74,7 +74,7 @@ export function ModelList({ models, category, selected, onSelect }: { models: Pu
       <label className="relative mb-3 block">
         <span className="sr-only">Search models</span>
         <MagnifyingGlass size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-subtle" aria-hidden />
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search models" className="h-10 w-full rounded-[10px] border border-border bg-bg-elevated pr-3 pl-9 text-sm text-fg placeholder:text-fg-subtle focus:border-accent-text focus:outline-none" />
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search models" className="field h-10 w-full rounded-[12px] pr-3 pl-9 text-sm text-fg placeholder:text-fg-subtle" />
       </label>
       <ul className="fade-y -mx-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-1 pb-6" aria-label="Models">
         {list.length === 0 && <li className="px-2 py-6 text-center text-sm text-fg-muted">No models match.</li>}

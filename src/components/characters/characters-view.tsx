@@ -55,8 +55,8 @@ export function CharactersView({ initial, enabled, maxUploadMb }: { initial: C[]
 
   return (
     <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-      <Card className="h-fit p-5">
-        <h2 className="mb-4 font-semibold">Train a new character</h2>
+      <Card className="h-fit p-5 lg:sticky lg:top-10">
+        <h2 className="mb-4 text-[17px] font-semibold">Train a new character</h2>
         {!enabled ? (
           <Notice tone="warn">Soul ID training is turned off. An admin can enable it in Admin → Models.</Notice>
         ) : (
@@ -66,14 +66,14 @@ export function CharactersView({ initial, enabled, maxUploadMb }: { initial: C[]
             </Field>
             <div>
               <p id="ver-label" className="mb-1.5 text-sm font-medium">Model</p>
-              <div role="radiogroup" aria-labelledby="ver-label" className="flex flex-wrap gap-1.5">
+              <div role="radiogroup" aria-labelledby="ver-label" className="grid grid-cols-3 gap-1 rounded-full bg-surface-2 p-1">
                 {VERSIONS.map((v) => (
-                  <button key={v.id} type="button" role="radio" aria-checked={version === v.id} onClick={() => setVersion(v.id)} className={cn("h-9 rounded-full px-3.5 text-[13px] font-medium", version === v.id ? "bg-fg text-bg" : "border border-border text-fg-muted hover:text-fg")}>{v.label}</button>
+                  <button key={v.id} type="button" role="radio" aria-checked={version === v.id} onClick={() => setVersion(v.id)} className={cn("h-9 rounded-full px-2 text-[13px] font-medium whitespace-nowrap transition-colors", version === v.id ? "bg-[var(--seg-on)] text-fg shadow-sm" : "text-fg-muted hover:text-fg")}>{v.label}</button>
                 ))}
               </div>
               <p className="mt-1.5 text-[12px] text-fg-subtle">Characters work with the matching SOUL model only.</p>
             </div>
-            <Dropzone id="char-images" kind="images" label="Reference photos (1 to 100)" value={images} onChange={(v) => setImages((v as string[]) ?? [])} maxItems={100} maxMb={maxUploadMb} required compact />
+            <Dropzone id="char-images" kind="images" label="Reference photos (1 to 100)" value={images} onChange={(v) => setImages((v as string[]) ?? [])} maxItems={100} maxMb={maxUploadMb} required />
             {error && <Notice tone="danger">{error}</Notice>}
             <Button type="submit" variant="primary" disabled={busy || !name.trim() || images.length === 0}>{busy ? "Starting…" : "Start training"}</Button>
             <p className="text-[12px] text-fg-subtle">Use clear, well-lit photos of one person from several angles. Higgsfield limits how many characters train at once.</p>

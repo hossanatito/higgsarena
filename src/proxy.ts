@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { platformAppUrl } from "@/lib/env-check";
 
 /**
  * Per-request nonce Content-Security-Policy. Next.js applies the nonce to its
@@ -7,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
-  const https = (process.env.APP_URL ?? "").startsWith("https://");
+  const https = (process.env.APP_URL || platformAppUrl(process.env) || "").startsWith("https://");
   // Development only: the local Higgsfield mock serves media over http.
   const mock = !isDev ? "" : (process.env.HF_API_BASE_URL ?? "").match(/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?/)?.[0] ?? "";
   const extra = mock ? ` ${mock}` : "";

@@ -35,15 +35,15 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader title="Analytics" description="Every figure is the sum of recorded generation costs (estimates). The Higgsfield Console is the billing record." actions={<a href={`/api/admin/export/generations?${qs}`} className="inline-flex h-9 items-center rounded-full border border-border px-3.5 text-sm hover:bg-surface-2">Export CSV</a>} />
-      <form className="mb-6 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end" method="get">
-        <label className="grid gap-1 text-[12px] text-fg-muted">From<input name="from" type="date" defaultValue={fromStr} className="h-10 rounded-[10px] border border-border bg-bg-elevated px-3 text-sm text-fg" /></label>
-        <label className="grid gap-1 text-[12px] text-fg-muted">To<input name="to" type="date" defaultValue={toStr} className="h-10 rounded-[10px] border border-border bg-bg-elevated px-3 text-sm text-fg" /></label>
+      <PageHeader title="Analytics" description="Every figure is the sum of recorded generation costs (estimates). The Higgsfield Console is the billing record." actions={<a href={`/api/admin/export/generations?${qs}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-sm font-medium text-fg hover:bg-surface-3">Export CSV</a>} />
+      <form className="panel mb-6 grid grid-cols-2 gap-3 p-3 sm:flex sm:flex-wrap sm:items-end" method="get">
+        <label className="grid gap-1 text-[12px] text-fg-muted">From<input name="from" type="date" defaultValue={fromStr} className="field h-10 rounded-[12px] px-3 text-sm text-fg" /></label>
+        <label className="grid gap-1 text-[12px] text-fg-muted">To<input name="to" type="date" defaultValue={toStr} className="field h-10 rounded-[12px] px-3 text-sm text-fg" /></label>
         <label className="grid gap-1 text-[12px] text-fg-muted">Team<Select name="team" defaultValue={sp.team ?? ""} className="h-10 sm:w-40"><option value="">All</option>{teamOpts.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</Select></label>
         <label className="grid gap-1 text-[12px] text-fg-muted">Member<Select name="member" defaultValue={sp.member ?? ""} className="h-10 sm:w-52"><option value="">All</option>{memberOpts.map((m) => <option key={m.id} value={m.id}>{m.email}</option>)}</Select></label>
         <label className="grid gap-1 text-[12px] text-fg-muted">Model<Select name="model" defaultValue={sp.model ?? ""} className="h-10 sm:w-52"><option value="">All</option>{allModels.map((m) => <option key={m.slug} value={m.slug}>{m.name}</option>)}</Select></label>
         <label className="grid gap-1 text-[12px] text-fg-muted">Key<Select name="key" defaultValue={sp.key ?? ""} className="h-10 sm:w-36"><option value="">Both</option><option value="org">Organization</option><option value="personal">Personal</option></Select></label>
-        <Button type="submit" size="sm" className="h-10">Apply</Button>
+        <Button type="submit" size="sm" variant="primary" className="h-10 col-span-2 sm:col-span-1">Apply</Button>
       </form>
       {s.unknownCost > 0 && <div className="mb-4"><Notice tone="warn">{s.unknownCost} job(s) in this range ran without an estimate and are flagged “cost unknown”; their cost is not in these totals.</Notice></div>}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

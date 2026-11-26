@@ -36,9 +36,9 @@ export default async function DocsPage() {
       <PageHeader title="Guide" description="How HiggsArena works, from your first generation to budgets and overrides." />
       <div className="grid gap-8 lg:grid-cols-[200px_1fr]">
         <nav aria-label="On this page" className="hidden lg:block">
-          <ul className="sticky top-10 grid gap-1 text-sm text-fg-muted">
-            {[["start", "Getting started"], ["statuses", "Job statuses"], ["costs", "Costs and estimates"], ["restrictions", "Restrictions and overrides"], ["expiry", "Why outputs expire"], ["keys", "Keys"], ["characters", "Characters"], ["links", "Higgsfield links"]].map(([id, l]) => (
-              <li key={id}><a className="block rounded-[8px] px-2 py-1.5 hover:bg-surface-2 hover:text-fg" href={`#${id}`}>{l}</a></li>
+          <ul className="sticky top-10 grid gap-0.5 text-[14px] text-fg-muted">
+            {[["start", "Getting started"], ["statuses", "Job statuses"], ["costs", "Costs and estimates"], ["restrictions", "Restrictions and overrides"], ["expiry", "Why outputs expire"], ["keys", "Keys"], ["presets", "Presets"], ["collections", "Collections"], ["characters", "Characters"], ["links", "Higgsfield links"]].map(([id, l]) => (
+              <li key={id}><a className="flex h-9 items-center rounded-[10px] px-3 transition-colors hover:bg-surface-2 hover:text-fg" href={`#${id}`}>{l}</a></li>
             ))}
           </ul>
         </nav>
@@ -86,6 +86,19 @@ export default async function DocsPage() {
             <H id="keys">Keys</H>
             <p>Jobs normally run on the <strong>organization key</strong> that admins manage. If admins allow it, you can add <strong>your own key</strong> in Settings and choose “My key” in the composer. Your key is encrypted on the server and never shown again after saving; only a short hint is displayed.</p>
             {admin && <p>Admins: add the organization key and the webhook signing secret (<code>whsec_…</code>) in <strong>Admin → API keys</strong>. With a webhook secret and a public HTTPS URL, Higgsfield notifies HiggsArena when jobs finish; otherwise HiggsArena polls.</p>}
+          </section>
+
+          <section className="grid gap-3">
+            <H id="presets">Presets</H>
+            <p>A preset is a saved starting point: a model, its settings and a prompt template. Pick one from the <strong>Preset</strong> button at the start of the composer. Words in double braces, like <code>{"{{product}}"}</code>, become short fill-in fields above the prompt.</p>
+            <p>Admins can <strong>lock</strong> fields so a brand look stays consistent. Locked settings show a lock and can't be changed, and the server applies the preset's values on every job, so a locked field can't be bypassed. Presets can be limited to certain teams.</p>
+            {admin && <p>Admins: set up the studio the way you want, then choose <strong>Save current settings as a preset</strong> in the preset menu. Edit the name, template, locks and teams in <strong>Admin → Presets</strong>.</p>}
+          </section>
+
+          <section className="grid gap-3">
+            <H id="collections">Collections</H>
+            <p>Group results into boards from any job card or the Library viewer. A <strong>private</strong> collection is yours (admins can see it too); a <strong>team</strong> collection is visible to everyone in the studio, but only its owner and admins can change it.</p>
+            <p>Create a <strong>read-only link</strong> to share a collection with someone outside the studio. The link shows finished media only, never costs or names, and prompts only if you allow them. Links can expire after 7, 30 or 90 days, and you can turn a link off at any time. The full link is shown once, so copy it when you create it.</p>
           </section>
 
           <section className="grid gap-3">

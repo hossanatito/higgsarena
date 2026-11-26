@@ -12,7 +12,7 @@ export default async function NoAccessPage() {
   if (ctx.state === "unverified") redirect("/verify-email");
   const suspended = ctx.state === "suspended";
   return (
-    <div className="panel p-6 text-center sm:p-8">
+    <div className="auth-card text-center">
       <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-surface-2 text-fg-muted">
         <LockSimple size={28} aria-hidden />
       </div>

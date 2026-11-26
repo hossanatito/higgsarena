@@ -24,6 +24,10 @@ const optional = z
 const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  /** Direct (non-pooled) connection for migrations, e.g. Neon's DATABASE_URL_UNPOOLED. */
+  DATABASE_URL_UNPOOLED: optional,
+  /** Connections per server instance. Keep it low (1 to 3) on serverless hosts. */
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
   APP_URL: z.string().url("APP_URL must be a full URL such as https://studio.example.com"),
   BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
   ENCRYPTION_KEY: z.string().refine((v) => {
@@ -70,8 +74,19 @@ export class EnvError extends Error {
   }
 }
 
+/**
+ * On Vercel, Render and Railway the public address is known from the
+ * platform, so APP_URL can be left unset there. An explicit APP_URL wins.
+ */
+export function platformAppUrl(source: Record<string, string | undefined>): string | undefined {
+  if (source.RENDER_EXTERNAL_URL) return source.RENDER_EXTERNAL_URL;
+  const host = source.VERCEL_PROJECT_PRODUCTION_URL || source.RAILWAY_PUBLIC_DOMAIN;
+  return host ? `https://${host}` : undefined;
+}
+
 export function parseEnv(source: Record<string, string | undefined>): Env {
-  const parsed = schema.safeParse(source);
+  const withUrl = source.APP_URL?.trim() ? source : { ...source, APP_URL: platformAppUrl(source) };
+  const parsed = schema.safeParse(withUrl);
   if (!parsed.success) {
     throw new EnvError(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`));
   }

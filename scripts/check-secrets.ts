@@ -52,7 +52,7 @@ console.log(`Scanned ${files.length} client files for ${secrets.length} secrets 
 
 async function crawl(base: string) {
   const users = ["owner@demo.local", "admin@demo.local", "member@demo.local"];
-  const pages = ["/", "/studio", "/library", "/characters", "/settings", "/docs", "/admin", "/admin/analytics", "/admin/models", "/admin/members", "/admin/teams", "/admin/restrictions", "/admin/overrides", "/admin/keys", "/admin/output", "/admin/audit", "/admin/settings", "/api/generations", "/api/notifications", "/api/characters", "/api/health", "/api/admin/export/generations", "/api/admin/export/audit"];
+  const pages = ["/", "/studio", "/library", "/characters", "/settings", "/docs", "/admin", "/admin/analytics", "/admin/models", "/admin/members", "/admin/teams", "/admin/restrictions", "/admin/overrides", "/admin/keys", "/admin/output", "/admin/audit", "/admin/settings", "/admin/presets", "/collections", "/api/generations", "/api/notifications", "/api/characters", "/api/health", "/api/admin/export/generations", "/api/admin/export/audit"];
   for (const email of users) {
     const res = await fetch(`${base}/api/auth/sign-in/email`, { method: "POST", headers: { "content-type": "application/json", origin: process.env.APP_URL ?? base }, body: JSON.stringify({ email, password: "arena-demo-password" }) });
     if (!res.ok) {

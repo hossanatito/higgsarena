@@ -21,8 +21,8 @@ export default async function TeamsPage() {
   return (
     <>
       <PageHeader title="Teams" description="Group members, give teams their own budget and rules, and optionally share a library." />
-      <Card className="mb-6 p-5">
-        <ActionForm action={createTeam} submitLabel="Create team" resetOnSuccess>
+      <Card className="mb-6 p-4 sm:p-5">
+        <ActionForm action={createTeam} submitLabel="Create team" resetOnSuccess className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end [&>div:last-child]:mt-0">
           <Field label="New team" htmlFor="team-name"><Input id="team-name" name="name" maxLength={80} placeholder="e.g. Marketing" required /></Field>
         </ActionForm>
       </Card>

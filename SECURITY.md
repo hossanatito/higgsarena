@@ -38,6 +38,15 @@ issues within 14 days.
 - **SSRF.** Output mirroring fetches only `https://` URLs and resolves DNS
   through a filter that blocks private, loopback, link-local and CGNAT ranges,
   including after redirects.
+- **Presets can't be bypassed.** Locked preset fields are applied on the
+  server for every generation, estimate and approved override, so editing a
+  request by hand doesn't change a locked value.
+- **Read-only links.** A shared collection link carries a random 192-bit
+  token; only its SHA-256 is stored, so the link is shown once. Public pages
+  show finished media only (no costs, people, request IDs or settings, and
+  prompts only if the owner allows), send `noindex` and `no-referrer`, are
+  rate limited per IP, can expire, and stop working the moment the link is
+  turned off or replaced.
 - **Accountability.** An audit log records key changes, role changes,
   restriction edits, overrides, invitations, model toggles and settings
   changes, with actor, time, IP and before/after values (secrets redacted).
@@ -55,6 +64,20 @@ issues within 14 days.
 - [ ] The Higgsfield webhook signing secret (`whsec_…`) is saved in Admin → API keys
 - [ ] Nightly backups are running and you have tested a restore
 - [ ] You know how to rotate `ENCRYPTION_KEY` (README → Key rotation)
+
+## Reviews
+
+- **Internal review, November 2026.** We went through authentication and
+  session handling, role checks on every admin action and API route,
+  organization scoping of every query, key encryption and redaction,
+  webhook verification, SSRF filtering, upload limits, CSP and headers,
+  preset lock enforcement and the public collection pages. `pnpm
+  check:secrets` crawls the app as each role and fails if a secret appears
+  in any response. Findings were fixed before release.
+- **External review.** HiggsArena has not had an independent third-party
+  audit yet. If you deploy it for a large team or sensitive work, we
+  recommend one. Reports from such reviews are welcome through the process
+  above.
 
 ## Supported versions
 

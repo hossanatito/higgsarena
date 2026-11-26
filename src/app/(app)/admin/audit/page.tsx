@@ -33,13 +33,13 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   const qs = new URLSearchParams({ from: f.from.toISOString().slice(0, 10), ...(sp.to ? { to: sp.to } : {}), ...(sp.action ? { action: sp.action } : {}), ...(sp.actor ? { actor: sp.actor } : {}) }).toString();
   return (
     <>
-      <PageHeader title="Audit log" description="Every admin action with who, when, from where, and what changed. Secrets are never logged." actions={<a href={`/api/admin/export/audit?${qs}`} className="inline-flex h-9 items-center rounded-full border border-border px-3.5 text-sm hover:bg-surface-2">Export CSV</a>} />
-      <form method="get" className="mb-5 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end">
+      <PageHeader title="Audit log" description="Every admin action with who, when, from where, and what changed. Secrets are never logged." actions={<a href={`/api/admin/export/audit?${qs}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-sm font-medium text-fg hover:bg-surface-3">Export CSV</a>} />
+      <form method="get" className="panel mb-6 grid grid-cols-2 gap-3 p-3 sm:flex sm:flex-wrap sm:items-end">
         <label className="grid gap-1 text-[12px] text-fg-muted">Action<Input name="action" defaultValue={sp.action} placeholder="e.g. model." className="h-10 sm:w-44" /></label>
         <label className="grid gap-1 text-[12px] text-fg-muted">Actor<Input name="actor" defaultValue={sp.actor} placeholder="email" className="h-10 sm:w-52" /></label>
-        <label className="grid gap-1 text-[12px] text-fg-muted">From<input name="from" type="date" defaultValue={f.from.toISOString().slice(0, 10)} className="h-10 rounded-[10px] border border-border bg-bg-elevated px-3 text-sm text-fg" /></label>
-        <label className="grid gap-1 text-[12px] text-fg-muted">To<input name="to" type="date" defaultValue={sp.to} className="h-10 rounded-[10px] border border-border bg-bg-elevated px-3 text-sm text-fg" /></label>
-        <Button type="submit" size="sm" className="h-10">Filter</Button>
+        <label className="grid gap-1 text-[12px] text-fg-muted">From<input name="from" type="date" defaultValue={f.from.toISOString().slice(0, 10)} className="field h-10 rounded-[12px] px-3 text-sm text-fg" /></label>
+        <label className="grid gap-1 text-[12px] text-fg-muted">To<input name="to" type="date" defaultValue={sp.to} className="field h-10 rounded-[12px] px-3 text-sm text-fg" /></label>
+        <Button type="submit" size="sm" variant="primary" className="h-10 col-span-2 sm:col-span-1">Filter</Button>
       </form>
       <Table>
         <thead><tr><Th>Time</Th><Th>Actor</Th><Th>Action</Th><Th>Target</Th><Th>Change</Th><Th>IP</Th></tr></thead>

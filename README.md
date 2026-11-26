@@ -16,6 +16,8 @@ Clone it, add a Higgsfield API key, and your team gets a polished studio for ima
 - **Studio**: tool switcher (Image, Edit, Video, Motion, Characters), forms built from each model's schema, drag-and-drop or camera-roll uploads, live cost estimate, live job feed, cancel while queued, remix any result.
 - **Library**: masonry grid with filters, full-screen viewer, favourites, expiry badges, delete (also deletes on Higgsfield), org-wide view for admins.
 - **Characters**: train Soul ID characters from 1–100 photos and use them in SOUL models.
+- **Presets**: saved starting points with a `{{variable}}` prompt template. Admins can lock fields to keep work on brand and limit presets to teams; the server enforces the locks.
+- **Collections**: group results into private or team boards and share them with a read-only link that can expire and never shows costs or names.
 - **Admin console**: models on/off, invitations, roles, teams, restrictions at org / team / member level (strictest wins), monthly budgets with a hard stop and one-click override approval, encrypted API keys, output retention and S3/R2 mirroring, audit log with CSV export.
 - **Analytics**: spend by day and month (image vs video), by model, member and team against budgets, status mix, median time per model, month-end projection, override activity, CSV export.
 - **Email**: Resend and Brevo with automatic fallback, for invitations, verification, password reset, budget alerts, override decisions and key problems.
@@ -27,6 +29,7 @@ Clone it, add a Higgsfield API key, and your team gets a polished studio for ima
 - [Local install (10 minutes)](#local-install)
 - [Getting a Higgsfield key](#getting-a-higgsfield-key)
 - [Deploy to a VPS with Docker](#deploy-to-a-vps-with-docker)
+- [Deploy to Vercel, Render or Railway](#deploy-to-vercel-render-or-railway)
 - [Email: Resend or Brevo](#email-resend-or-brevo)
 - [Google and GitHub sign-in](#google-and-github-sign-in)
 - [Storage: S3 or R2](#storage-s3-or-r2)
@@ -169,6 +172,18 @@ Migrations run automatically when the new container starts.
 
 Guides for Vercel and Railway / Render are planned for a later release.
 
+## Deploy to Vercel, Render or Railway
+
+The VPS setup above is the reference install. These hosts also work, each with a step-by-step guide:
+
+| Host | Guide | How it runs | Sweep |
+| --- | --- | --- | --- |
+| Vercel | [docs/deploy/vercel.md](docs/deploy/vercel.md) | Serverless functions, hosted Postgres (Neon) | Every minute on Pro (`vercel.json`); Hobby needs the optional GitHub workflow |
+| Render | [docs/deploy/render.md](docs/deploy/render.md) | The Docker image, from the `render.yaml` Blueprint | Every minute, a cron job in the Blueprint |
+| Railway | [docs/deploy/railway.md](docs/deploy/railway.md) | The Docker image (`railway.json`) | Every 5 minutes, a second service (`railway.sweep.json`) |
+
+On all three, `APP_URL` defaults to the platform's own address, so you only set it for a custom domain.
+
 ## Email: Resend or Brevo
 
 Configure in **Admin → Settings → Email** (keys are encrypted), or as a fallback in `.env` (`RESEND_API_KEY`, `BREVO_API_KEY`, `EMAIL_FROM`). Pick a primary and optionally the other as fallback: if a send fails, HiggsArena retries once on the fallback and logs both attempts.
@@ -249,7 +264,9 @@ To update the shipped catalog for everyone, run `pnpm catalog:pull` and open a p
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | Postgres connection string |
-| `APP_URL` | Yes | Public URL; must be `https://` in production; used for links, OAuth callbacks and webhooks |
+| `DATABASE_URL_UNPOOLED` | No | Direct connection used for migrations when `DATABASE_URL` goes through a pooler (Neon, Supabase) |
+| `DATABASE_POOL_MAX` | No | Connections per server instance, default `10`. Use `2` on Vercel |
+| `APP_URL` | Yes | Public URL; must be `https://` in production; used for links, OAuth callbacks and webhooks. On Vercel, Render and Railway it defaults to the platform address |
 | `BETTER_AUTH_SECRET` | Yes | Session signing secret, 32+ random characters |
 | `ENCRYPTION_KEY` | Yes | 32 random bytes, base64, encrypts stored secrets |
 | `ENCRYPTION_KEY_PREVIOUS` | No | Previous key during rotation |

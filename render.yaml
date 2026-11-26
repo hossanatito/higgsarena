@@ -1,0 +1,49 @@
+# Render Blueprint: web service (Docker), managed Postgres, and a per-minute sweep.
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repository.
+# See docs/deploy/render.md.
+databases:
+  - name: higgsarena-db
+    plan: basic-256mb
+    databaseName: higgsarena
+    user: higgsarena
+    postgresMajorVersion: "16"
+
+envVarGroups:
+  - name: higgsarena-shared
+    envVars:
+      - key: CRON_SECRET
+        generateValue: true
+
+services:
+  - type: web
+    name: higgsarena
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - fromGroup: higgsarena-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: higgsarena-db
+          property: connectionString
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true # 256 random bits, base64: the format HiggsArena expects
+      - key: OWNER_EMAILS
+        sync: false # you are asked for it when the Blueprint is created
+      - key: TRUST_PROXY
+        value: "true"
+      # APP_URL defaults to the onrender.com address. Set it when you add a custom domain.
+
+  - type: cron
+    name: higgsarena-sweep
+    runtime: docker
+    dockerfilePath: ./scripts/sweep.Dockerfile
+    schedule: "* * * * *"
+    plan: starter
+    envVars:
+      - fromGroup: higgsarena-shared
+      - key: SWEEP_URL
+        sync: false # https://<your-service>.onrender.com/api/cron/sweep

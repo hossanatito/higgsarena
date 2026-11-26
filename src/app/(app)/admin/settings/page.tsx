@@ -16,9 +16,9 @@ export const metadata = { title: "Instance settings" };
 
 function Section({ id, title, description, children }: { id: string; title: string; description?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Card className="scroll-mt-6 p-5 sm:p-6" id={id}>
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {description && <p className="mt-1 text-[13px] text-fg-subtle">{description}</p>}
+    <Card className="scroll-mt-24 p-5 sm:p-6" id={id}>
+      <h2 className="text-[17px] font-semibold">{title}</h2>
+      {description && <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-fg-subtle">{description}</p>}
       <div className="mt-5">{children}</div>
     </Card>
   );
@@ -26,7 +26,7 @@ function Section({ id, title, description, children }: { id: string; title: stri
 
 function Check({ ok, label, detail }: { ok: boolean | null; label: string; detail?: string }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-[12px] border border-border px-4 py-3 text-sm">
+    <li className="flex items-center justify-between gap-3 rounded-[12px] bg-surface-2 px-4 py-3 text-sm">
       <span>{label}{detail && <span className="block text-[12px] text-fg-subtle">{detail}</span>}</span>
       <Badge tone={ok === null ? "neutral" : ok ? "ok" : "warn"}>{ok === null ? "Not set" : ok ? "OK" : "Check"}</Badge>
     </li>
@@ -47,12 +47,15 @@ export default async function InstanceSettingsPage({ searchParams }: { searchPar
   return (
     <>
       <PageHeader title="Instance settings" description="Owner-only configuration for this HiggsArena install. Secrets are encrypted and write-only: only a hint is shown." />
-      <nav aria-label="Sections" className="mb-6 flex flex-wrap gap-2 text-sm">
-        {[["email", "Email"], ["storage", "Storage"], ["signup", "Sign-up"], ["signin", "Sign-in methods"], ["catalog", "Model catalog"], ["health", "Health"]].map(([id, l]) => (
-          <a key={id} href={`#${id}`} className="rounded-full border border-border px-3 py-1.5 text-fg-muted hover:text-fg">{l}</a>
-        ))}
+      <div className="grid gap-8 lg:grid-cols-[180px_minmax(0,1fr)]">
+      <nav aria-label="Sections" className="scrollbar-none -mx-4 overflow-x-auto px-4 lg:mx-0 lg:overflow-visible lg:px-0">
+        <ul className="flex gap-1 text-[14px] lg:sticky lg:top-10 lg:grid lg:gap-0.5">
+          {[["email", "Email"], ["storage", "Storage"], ["signup", "Sign-up"], ["signin", "Sign-in methods"], ["catalog", "Model catalog"], ["health", "Health"]].map(([id, l]) => (
+            <li key={id}><a href={`#${id}`} className="flex h-9 items-center rounded-full px-3 whitespace-nowrap text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg lg:rounded-[10px]">{l}</a></li>
+          ))}
+        </ul>
       </nav>
-      <div className="grid gap-6">
+      <div className="grid min-w-0 gap-4">
         <Section id="email" title="Email delivery" description="Resend or Brevo as primary, the other as optional fallback. On a failed send HiggsArena retries once on the fallback and logs both attempts. With neither set, development prints emails to the server console.">
           <ActionForm action={saveEmailSettings}>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -113,7 +116,7 @@ export default async function InstanceSettingsPage({ searchParams }: { searchPar
         <Section id="signin" title="Sign-in methods" description="Google and GitHub are enabled when their client ID and secret are set in .env. Paste these callback URLs into each provider.">
           <ul className="grid gap-3">
             {([["Email and password", true, null], ["Google", social.google, appUrl("/api/auth/callback/google")], ["GitHub", social.github, appUrl("/api/auth/callback/github")]] as const).map(([name, on, cb]) => (
-              <li key={name} className="rounded-[12px] border border-border px-4 py-3">
+              <li key={name} className="rounded-[12px] bg-surface-2 px-4 py-3">
                 <div className="flex items-center justify-between"><span className="text-sm font-medium">{name}</span><Badge tone={on ? "ok" : "neutral"}>{on ? "Enabled" : "Not configured"}</Badge></div>
                 {cb && <p className="mono mt-1 text-[12px] break-all text-fg-muted">Callback: {cb}</p>}
               </li>
@@ -179,6 +182,7 @@ export default async function InstanceSettingsPage({ searchParams }: { searchPar
           </ul>
           <p className="mt-4 text-[13px] text-fg-subtle">HiggsArena v{APP_VERSION} · <Link href="/api/health" className="underline">/api/health</Link> for uptime checks</p>
         </Section>
+      </div>
       </div>
     </>
   );

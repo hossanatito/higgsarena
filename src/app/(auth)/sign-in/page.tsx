@@ -15,7 +15,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const social = enabledSocialProviders();
   const next = sp.next?.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "/studio";
   return (
-    <div className="panel p-6 sm:p-8">
+    <div className="auth-card">
       <h1 className="text-2xl font-bold tracking-tight">Sign in</h1>
       <p className="mt-1 mb-6 text-[15px] text-fg-muted">Welcome back to the studio.</p>
       {sp.reset && <div className="mb-4"><Notice tone="ok">Password updated. Sign in with your new password.</Notice></div>}
