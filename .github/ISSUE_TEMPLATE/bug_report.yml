@@ -1,0 +1,37 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Go to …\n2. Click …"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HiggsArena version
+      placeholder: "1.0.0 (Admin → Settings → Health)"
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: How are you running it?
+      options: [Local (pnpm dev), Docker Compose on a VPS, Other]
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Server logs (`docker compose logs app`). Remove any keys or emails first. Higgsfield request and correlation IDs help.
+      render: text
+  - type: markdown
+    attributes:
+      value: "**Security issues:** please don't open a public issue. See SECURITY.md."

@@ -1,0 +1,17 @@
+# Automatic HTTPS from Let's Encrypt for {$DOMAIN}.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+	# Security headers are set by the app; Caddy only adds HSTS at the edge too.
+	header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	request_body {
+		max_size 10MB
+	}
+	reverse_proxy app:3000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Real-IP {remote_host}
+	}
+}

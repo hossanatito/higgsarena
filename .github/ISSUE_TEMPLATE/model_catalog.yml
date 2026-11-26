@@ -1,0 +1,20 @@
+name: Model catalog
+description: A Higgsfield model is missing, renamed or has the wrong fields
+labels: [catalog]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Model and endpoint
+      placeholder: "Kling 3.0 Pro · kling-video/v3.0/pro/text-to-video"
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: Higgsfield docs page
+      placeholder: https://docs.higgsfield.ai/docs/models/…
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What's wrong?

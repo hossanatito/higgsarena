@@ -1,0 +1,259 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Tokens. Dark is the default; light follows the system or the toggle. */
+/* ------------------------------------------------------------------ */
+
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --bg-elevated: #111114;
+  --surface: #16161a;
+  --surface-2: #1d1d22;
+  --surface-3: #26262c;
+  --border: #2a2a31;
+  --border-strong: #3a3a43;
+  --fg: #f4f4f5;
+  --fg-muted: #a8a8b3;
+  --fg-subtle: #858591;
+  --accent: #c6f432;
+  --accent-hover: #d4fb5c;
+  --accent-fg: #0b0d02;
+  --accent-text: #c6f432;
+  --accent-soft: rgb(198 244 50 / 0.12);
+  --glass: rgb(17 17 20 / 0.72);
+  --glass-border: rgb(255 255 255 / 0.07);
+  --overlay: rgb(0 0 0 / 0.72);
+  --ok: #4ade80;
+  --ok-soft: rgb(74 222 128 / 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgb(251 191 36 / 0.12);
+  --danger: #f87171;
+  --danger-soft: rgb(248 113 113 / 0.12);
+  --info: #60a5fa;
+  --info-soft: rgb(96 165 250 / 0.12);
+  --shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 40px rgb(0 0 0 / 0.45);
+  --ring: #c6f432;
+  --chart-image: #338ced;
+  --chart-video: #e76624;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f6f6f7;
+    --bg-elevated: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f1f1f3;
+    --surface-3: #e6e6ea;
+    --border: #e2e2e7;
+    --border-strong: #cdcdd4;
+    --fg: #0c0c0f;
+    --fg-muted: #52525c;
+    --fg-subtle: #6b6b76;
+    --accent: #c6f432;
+    --accent-hover: #b5e61f;
+    --accent-fg: #0b0d02;
+    --accent-text: #4a6500;
+    --accent-soft: rgb(132 170 0 / 0.14);
+    --glass: rgb(255 255 255 / 0.78);
+    --glass-border: rgb(0 0 0 / 0.07);
+    --overlay: rgb(10 10 12 / 0.55);
+    --ok: #15803d;
+    --ok-soft: rgb(22 163 74 / 0.12);
+    --warn: #a16207;
+    --warn-soft: rgb(202 138 4 / 0.14);
+    --danger: #b91c1c;
+    --danger-soft: rgb(220 38 38 / 0.1);
+    --info: #1d4ed8;
+    --info-soft: rgb(37 99 235 / 0.1);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
+    --ring: #4a6500;
+    --chart-image: #257de0;
+    --chart-video: #f47230;
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f6f7;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f1f1f3;
+  --surface-3: #e6e6ea;
+  --border: #e2e2e7;
+  --border-strong: #cdcdd4;
+  --fg: #0c0c0f;
+  --fg-muted: #52525c;
+  --fg-subtle: #6b6b76;
+  --accent: #c6f432;
+  --accent-hover: #b5e61f;
+  --accent-fg: #0b0d02;
+  --accent-text: #4a6500;
+  --accent-soft: rgb(132 170 0 / 0.14);
+  --glass: rgb(255 255 255 / 0.78);
+  --glass-border: rgb(0 0 0 / 0.07);
+  --overlay: rgb(10 10 12 / 0.55);
+  --ok: #15803d;
+  --ok-soft: rgb(22 163 74 / 0.12);
+  --warn: #a16207;
+  --warn-soft: rgb(202 138 4 / 0.14);
+  --danger: #b91c1c;
+  --danger-soft: rgb(220 38 38 / 0.1);
+  --info: #1d4ed8;
+  --info-soft: rgb(37 99 235 / 0.1);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
+  --ring: #4a6500;
+  --chart-image: #257de0;
+  --chart-video: #f47230;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: var(--font-figtree), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* One shape rule: 16px panels and cards, 10px inputs, pills for buttons and chips. */
+  --radius-panel: 16px;
+  --radius-input: 10px;
+  --shadow-panel: var(--shadow);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.mono,
+code,
+kbd {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Frosted glass with a solid fallback for reduced transparency. */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--bg-elevated);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--bg-elevated);
+  }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+}
+
+/* Shimmer skeletons while jobs render. */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  animation: shimmer 1.6s infinite;
+}
+:root[data-theme="light"] .shimmer::after {
+  background: linear-gradient(90deg, transparent, rgb(0 0 0 / 0.05), transparent);
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Masonry via CSS columns. */
+.masonry {
+  column-gap: 12px;
+}
+.masonry > * {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
