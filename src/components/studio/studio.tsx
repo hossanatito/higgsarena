@@ -12,6 +12,7 @@ import { Viewer } from "@/components/library/viewer";
 import { carryValues, defaultValues, FieldInput, settingsSummary } from "./fields";
 import { JobCard } from "./job-card";
 import { CategoryTabs, ModelList } from "./model-picker";
+import { SettingsPanel } from "./settings-panel";
 import { isActive, type BlockReason, type CharacterOption, type ClientGeneration, type KeyOptions, type PublicModel, type Values } from "./types";
 
 type Estimate =
@@ -71,6 +72,21 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
     setBlocked(null);
     setSubmitError(null);
     setPickerOpen(false);
+  };
+
+  const closeSettings = useCallback(() => setExpanded(false), []);
+  const resetSettings = () => {
+    if (!model) return;
+    const defaults = defaultValues(model.fields);
+    setValues((prev) => {
+      const next: Values = {};
+      for (const f of model.fields) {
+        if (f.group === "main" && prev[f.name] !== undefined) next[f.name] = prev[f.name];
+        else if (defaults[f.name] !== undefined) next[f.name] = defaults[f.name];
+      }
+      return next;
+    });
+    setFieldErrors({});
   };
 
   const setValue = (name: string, v: unknown) => {
@@ -275,42 +291,25 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
             className="composer pointer-events-auto mx-auto max-w-[880px]"
             aria-label="Composer"
           >
-            <AnimatePresence initial={false}>
-              {expanded && model && (
-                <motion.div id="composer-settings" initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }} animate={reduce ? { opacity: 1 } : { height: "auto", opacity: 1 }} exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }} transition={{ type: "spring", stiffness: 420, damping: 40 }} className="overflow-hidden">
-                  <div className="fade-y max-h-[44dvh] space-y-5 overflow-y-auto px-4 pt-4 pb-5 sm:px-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {settingFields.map((f) => (
-                        <div key={f.name} className={cn(f.kind === "select" && (f.options?.length ?? 0) > 4 && "sm:col-span-2")}>
-                          <FieldInput field={f} value={values[f.name]} onChange={(v) => setValue(f.name, v)} error={fieldErrors[f.name]} characters={characters} maxMb={maxUploadMb} keySource={keySource} modelSlug={model.slug} />
-                        </div>
-                      ))}
-                    </div>
-                    {advancedFields.length > 0 && (
-                      <details className="group">
-                        <summary className="flex h-10 cursor-pointer list-none items-center gap-1.5 text-[13px] font-medium text-fg-muted hover:text-fg">
-                          <CaretDown size={14} className="transition-transform group-open:rotate-180" aria-hidden /> Advanced <span className="mono text-fg-subtle">{advancedFields.length}</span>
-                        </summary>
-                        <div className="mt-2 grid gap-4 sm:grid-cols-2">
-                          {advancedFields.map((f) => (
-                            <div key={f.name} className={cn(f.kind === "json" && "sm:col-span-2")}>
-                              <FieldInput field={f} value={values[f.name]} onChange={(v) => setValue(f.name, v)} error={fieldErrors[f.name]} characters={characters} maxMb={maxUploadMb} keySource={keySource} modelSlug={model.slug} />
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                    {model.notes && (
-                      <details>
-                        <summary className="cursor-pointer text-[13px] text-fg-subtle hover:text-fg">Model notes from the Higgsfield docs</summary>
-                        <div className="mt-2 text-[12px] leading-relaxed whitespace-pre-line text-fg-muted">{model.notes}</div>
-                      </details>
-                    )}
-                  </div>
-                  <div className="mx-4 h-px bg-border sm:mx-5" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {model && (
+              <SettingsPanel
+                open={expanded}
+                onClose={closeSettings}
+                anchorId="settings-chip"
+                modelName={model.name}
+                settingFields={settingFields}
+                advancedFields={advancedFields}
+                notes={model.notes}
+                values={values}
+                setValue={setValue}
+                errors={fieldErrors}
+                onReset={resetSettings}
+                characters={characters}
+                maxMb={maxUploadMb}
+                keySource={keySource}
+                modelSlug={model.slug}
+              />
+            )}
 
             {(submitError || blockedNow) && (
               <div className="px-3 pt-3 sm:px-4">
@@ -377,7 +376,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
                 </button>
               )}
               {(settingFields.length > 0 || advancedFields.length > 0) && (
-                <button type="button" onClick={() => setExpanded((x) => !x)} aria-expanded={expanded} aria-controls="composer-settings" className={cn("chip shrink-0", expanded && "chip-on")}>
+                <button id="settings-chip" type="button" onClick={() => setExpanded((x) => !x)} aria-expanded={expanded} aria-controls="composer-settings" className={cn("chip shrink-0", expanded && "chip-on")}>
                   <SlidersHorizontal size={16} className="shrink-0" aria-hidden />
                   <span className="mono hidden max-w-[200px] truncate sm:inline">{summary || "Settings"}</span>
                   <span className="sm:hidden">Settings</span>

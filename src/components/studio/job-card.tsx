@@ -1,7 +1,7 @@
 "use client";
 import { motion, useReducedMotion } from "motion/react";
-import type { ComponentType } from "react";
-import { ArrowCounterClockwise, ClockCountdown, CloudSlash, DownloadSimple, EyeSlash, FileArchive, Heart, HourglassMedium, PaperPlaneTilt, Play, Prohibit, Shuffle, Sparkle, Stack, WarningOctagon, type IconProps } from "@phosphor-icons/react";
+import { useState, type ComponentType } from "react";
+import { ArrowCounterClockwise, ClockCountdown, ImageBroken, CloudSlash, DownloadSimple, EyeSlash, FileArchive, Heart, HourglassMedium, PaperPlaneTilt, Play, Prohibit, Shuffle, Sparkle, Stack, WarningOctagon, type IconProps } from "@phosphor-icons/react";
 import { cn } from "@/lib/cn";
 import { expiryLabel, relativeTime, usd } from "@/lib/format";
 import type { ClientGeneration } from "./types";
@@ -30,6 +30,22 @@ export function altText(g: Pick<ClientGeneration, "prompt" | "modelName">): stri
   return g.prompt ? `Generated with ${g.modelName}: ${g.prompt.slice(0, 180)}` : `Generated with ${g.modelName}`;
 }
 
+/** Shown when a file can no longer be loaded (expired or deleted on Higgsfield). */
+function Unavailable({ className, aspect }: { className?: string; aspect?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center gap-2 bg-surface-2 text-fg-subtle", className)} style={aspect ? { aspectRatio: aspect } : undefined}>
+      <ImageBroken size={24} aria-hidden />
+      <span className="text-[12px]">Preview unavailable</span>
+    </div>
+  );
+}
+
+function SafeImg({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <Unavailable className={cn(className, "h-full")} aspect={style?.aspectRatio as string | undefined} />;
+  return <img src={src} alt={alt} loading="lazy" className={className} style={style} onError={() => setFailed(true)} />;
+}
+
 export function MediaPreview({ g, className, controls, fill }: { g: ClientGeneration; className?: string; controls?: boolean; fill?: boolean }) {
   const visual = g.outputs.filter((o) => o.kind === "image" || o.kind === "video");
   const first = visual[0];
@@ -44,11 +60,11 @@ export function MediaPreview({ g, className, controls, fill }: { g: ClientGenera
   if (visual.length > 1 && !controls) {
     return (
       <div className={cn("grid grid-cols-2 gap-0.5 bg-surface-2", fill && "h-full grid-rows-2", className)}>
-        {visual.slice(0, 4).map((o) => <img key={o.url} src={o.displayUrl} alt={altText(g)} loading="lazy" className={cn("w-full object-cover", fill ? "h-full" : "aspect-square")} />)}
+        {visual.slice(0, 4).map((o) => <SafeImg key={o.url} src={o.displayUrl} alt={altText(g)} className={cn("w-full object-cover", fill ? "h-full" : "aspect-square")} />)}
       </div>
     );
   }
-  return <img src={first.displayUrl} alt={altText(g)} loading="lazy" className={cn("block w-full object-cover", fill && "h-full", className)} style={fill ? undefined : { aspectRatio: aspectOf(g) }} />;
+  return <SafeImg src={first.displayUrl} alt={altText(g)} className={cn("block w-full object-cover", fill && "h-full", className)} style={fill ? undefined : { aspectRatio: aspectOf(g) }} />;
 }
 
 const STATUS_ICON: Record<ClientGeneration["status"], ComponentType<IconProps>> = {
