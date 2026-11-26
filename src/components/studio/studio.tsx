@@ -2,7 +2,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUp, CaretDown, CircleNotch, FilmSlate, ImageSquare, SlidersHorizontal, Sparkle, SquaresFour, UserFocus, WarningCircle } from "@phosphor-icons/react";
+import { ArrowUp, BookmarkSimple, CaretDown, LockSimple, CircleNotch, FilmSlate, ImageSquare, SlidersHorizontal, Sparkle, SquaresFour, UserFocus, WarningCircle } from "@phosphor-icons/react";
 import type { Category } from "@/lib/catalog/types";
 import { cn } from "@/lib/cn";
 import { usd } from "@/lib/format";
@@ -13,6 +13,10 @@ import { carryValues, defaultValues, FieldInput, settingsSummary } from "./field
 import { JobCard } from "./job-card";
 import { CategoryTabs, ModelList } from "./model-picker";
 import { SettingsPanel } from "./settings-panel";
+import { PresetMenu } from "./preset-menu";
+import { CollectionPicker } from "@/components/collections/collection-picker";
+import type { ClientPreset } from "@/lib/presets/repo";
+import { fillTemplate, templateVariables } from "@/lib/presets/core";
 import { isActive, type BlockReason, type CharacterOption, type ClientGeneration, type KeyOptions, type PublicModel, type Values } from "./types";
 
 type Estimate =
@@ -31,16 +35,38 @@ type Props = {
   remainingUsd: number | null;
   initial?: { slug: string; values: Values };
   setupHint?: string | null;
+  presets: ClientPreset[];
+  isAdmin: boolean;
+  initialPresetId?: string;
+  openPresetSave?: boolean;
 };
 
-export function Studio({ models, characters, initialFeed, keys, maxUploadMb, remainingUsd, initial, setupHint }: Props) {
+/** Values a preset starts with; a template without fill-ins becomes the prompt. */
+function presetValues(p: ClientPreset, fields: PublicModel["fields"]): Values {
+  const base: Values = { ...p.params };
+  if (p.promptTemplate) base.prompt = templateVariables(p.promptTemplate).length ? fillTemplate(p.promptTemplate, {}) : p.promptTemplate;
+  return carryValues(fields, base);
+}
+
+export function Studio({ models, characters, initialFeed, keys, maxUploadMb, remainingUsd, initial, setupHint, presets, isAdmin, initialPresetId, openPresetSave }: Props) {
   const reduce = useReducedMotion();
   const bySlug = useMemo(() => new Map(models.map((m) => [m.slug, m])), [models]);
-  const firstSlug = initial?.slug && bySlug.has(initial.slug) ? initial.slug : (models.find((m) => m.featured && m.category === "image") ?? models[0])?.slug;
+  const startPreset = initialPresetId ? presets.find((p) => p.id === initialPresetId && bySlug.has(p.modelSlug)) : undefined;
+  const firstSlug = startPreset ? startPreset.modelSlug : initial?.slug && bySlug.has(initial.slug) ? initial.slug : (models.find((m) => m.featured && m.category === "image") ?? models[0])?.slug;
   const [slug, setSlug] = useState<string | undefined>(firstSlug);
   const model = slug ? bySlug.get(slug) : undefined;
   const [category, setCategory] = useState<Category>((model?.category as Category) ?? "image");
-  const [values, setValues] = useState<Values>(() => (model ? (initial?.slug === model.slug ? carryValues(model.fields, initial.values) : defaultValues(model.fields)) : {}));
+  const [values, setValues] = useState<Values>(() => (model ? (startPreset ? presetValues(startPreset, model.fields) : initial?.slug === model.slug ? carryValues(model.fields, initial.values) : defaultValues(model.fields)) : {}));
+  const [presetId, setPresetId] = useState<string | null>(startPreset?.id ?? null);
+  const [presetVars, setPresetVars] = useState<Record<string, string>>({});
+  const [promptDetached, setPromptDetached] = useState(false);
+  const [presetMenuOpen, setPresetMenuOpen] = useState(false);
+  // Opened after mount (from ?savePreset=1) so server and client render the same markup.
+  useEffect(() => {
+    if (!openPresetSave) return;
+    const t = setTimeout(() => setPresetMenuOpen(true), 0);
+    return () => clearTimeout(t);
+  }, [openPresetSave]);
   const [keySource, setKeySource] = useState<"org" | "personal">(keys.org ? "org" : "personal");
   const [feed, setFeed] = useState<ClientGeneration[]>(initialFeed);
   const [estimate, setEstimate] = useState<Estimate>({ state: "idle" });
@@ -51,6 +77,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
   const [expanded, setExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [viewing, setViewing] = useState<ClientGeneration | null>(null);
+  const [collecting, setCollecting] = useState<string | null>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [overrideNote, setOverrideNote] = useState("");
   const [overrideState, setOverrideState] = useState<"idle" | "busy" | "sent" | string>("idle");
@@ -62,10 +89,47 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
   const promptField = model?.fields.find((f) => f.kind === "prompt");
   const settingFields = model?.fields.filter((f) => f.group === "settings") ?? [];
   const advancedFields = model?.fields.filter((f) => f.group === "advanced") ?? [];
+  const activePreset = presetId ? presets.find((p) => p.id === presetId) : undefined;
+  const locked = useMemo(() => new Set(activePreset?.lockedFields ?? []), [activePreset]);
+  const templateVars = activePreset && !promptDetached ? templateVariables(activePreset.promptTemplate) : [];
+  const lockedPrompt = !!activePreset && locked.has("prompt");
+  const missingVars = templateVars.filter((v) => !presetVars[v]?.trim());
+  const modelNames = useMemo(() => new Map(models.map((m) => [m.slug, m.name])), [models]);
+
+  const applyPreset = (p: ClientPreset) => {
+    const m = bySlug.get(p.modelSlug);
+    if (!m) {
+      setSubmitError(`The ${p.name} preset uses a model you can't access.`);
+      return;
+    }
+    setSlug(m.slug);
+    setCategory(m.category as Category);
+    setValues(presetValues(p, m.fields));
+    setPresetId(p.id);
+    setPresetVars({});
+    setPromptDetached(false);
+    setFieldErrors({});
+    setBlocked(null);
+    setSubmitError(null);
+    setPresetMenuOpen(false);
+  };
+  const clearPreset = () => {
+    setPresetId(null);
+    setPresetVars({});
+    setPromptDetached(false);
+    setPresetMenuOpen(false);
+  };
+  const setVar = (name: string, v: string) => {
+    const next = { ...presetVars, [name]: v };
+    setPresetVars(next);
+    if (activePreset?.promptTemplate) setValues((prev) => ({ ...prev, prompt: fillTemplate(activePreset.promptTemplate!, next) }));
+  };
+  const presetBody = activePreset ? { presetId: activePreset.id, presetVars } : {};
 
   const selectModel = (s: string) => {
     const next = bySlug.get(s);
     if (!next) return;
+    if (activePreset && activePreset.modelSlug !== s) clearPreset();
     setSlug(s);
     setValues((v) => carryValues(next.fields, v));
     setFieldErrors({});
@@ -81,7 +145,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
     setValues((prev) => {
       const next: Values = {};
       for (const f of model.fields) {
-        if (f.group === "main" && prev[f.name] !== undefined) next[f.name] = prev[f.name];
+        if ((f.group === "main" || locked.has(f.name)) && prev[f.name] !== undefined) next[f.name] = prev[f.name];
         else if (defaults[f.name] !== undefined) next[f.name] = defaults[f.name];
       }
       return next;
@@ -90,6 +154,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
   };
 
   const setValue = (name: string, v: unknown) => {
+    if (locked.has(name)) return;
     setValues((prev) => {
       const next = { ...prev };
       if (v === undefined) delete next[name];
@@ -115,7 +180,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
     const t = setTimeout(async () => {
       setEstimate({ state: "loading" });
       try {
-        const res = await fetch("/api/estimate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modelSlug: model.slug, params: values, keySource }), signal: ctrl.signal });
+        const res = await fetch("/api/estimate", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modelSlug: model.slug, params: values, keySource, ...presetBody }), signal: ctrl.signal });
         const data = await res.json();
         if (data.ok) setEstimate({ state: "ok", usd: data.estimateUsd, costUnknown: data.costUnknown, remainingUsd: data.remainingUsd });
         else if (data.blocked) setEstimate({ state: "blocked", reason: data.blocked, usd: data.estimateUsd, overridable: data.overridable });
@@ -128,7 +193,8 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [model, values, keySource, estimateReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [model, values, keySource, estimateReady, presetId, presetVars]);
   const shownEstimate: Estimate = estimateReady ? estimate : { state: "idle" };
 
   // Poll active jobs while the tab is visible.
@@ -164,7 +230,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
     setBlocked(null);
     setOverrideState("idle");
     try {
-      const res = await fetch("/api/generations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modelSlug: model.slug, params: values, keySource }) });
+      const res = await fetch("/api/generations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modelSlug: model.slug, params: values, keySource, ...presetBody }) });
       const data = await res.json();
       if (res.status === 409 && data.blocked) {
         setBlocked({ reason: data.blocked, usd: data.estimateUsd, overridable: data.overridable });
@@ -201,6 +267,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
       }
       setSlug(m.slug);
       setCategory(m.category as Category);
+      setPresetId(null);
       setValues(carryValues(m.fields, g.params));
       setFieldErrors({});
       setBlocked(null);
@@ -221,7 +288,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
   const requestOverride = async () => {
     if (!model) return;
     setOverrideState("busy");
-    const res = await fetch("/api/overrides", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modelSlug: model.slug, params: values, keySource, note: overrideNote || undefined }) });
+    const res = await fetch("/api/overrides", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ modelSlug: model.slug, params: values, keySource, ...presetBody, note: overrideNote || undefined }) });
     const data = await res.json();
     setOverrideState(res.ok ? "sent" : (data.error ?? "Could not send the request."));
     if (res.ok) setOverrideOpen(false);
@@ -237,7 +304,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
 
   const blockedNow = blocked ?? (shownEstimate.state === "blocked" ? { reason: shownEstimate.reason, usd: shownEstimate.usd, overridable: shownEstimate.overridable } : null);
   const summary = model ? settingsSummary(model.fields, values) : "";
-  const canGenerate = !!model && !submitting && !(promptField?.required && !String(values.prompt ?? "").trim());
+  const canGenerate = !!model && !submitting && !(promptField?.required && !String(values.prompt ?? "").trim()) && !(lockedPrompt && missingVars.length > 0);
 
   const characterField = mainFields.find((f) => f.kind === "character");
   const mediaFields = mainFields.filter((f) => f.kind !== "character");
@@ -269,7 +336,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
               <AnimatePresence initial={false}>
                 {feed.map((g) => (
-                  <JobCard key={g.id} g={g} onRemix={remix} onCancel={cancel} onOpen={setViewing} onFavorite={favorite} tile />
+                  <JobCard key={g.id} g={g} onRemix={remix} onCancel={cancel} onOpen={setViewing} onFavorite={favorite} onCollect={(x) => setCollecting(x.id)} tile />
                 ))}
               </AnimatePresence>
             </div>
@@ -291,8 +358,23 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
             className="composer pointer-events-auto mx-auto max-w-[880px]"
             aria-label="Composer"
           >
+            <PresetMenu
+              open={presetMenuOpen}
+              onClose={() => setPresetMenuOpen(false)}
+              anchorId="preset-chip"
+              presets={presets}
+              activeId={presetId}
+              onPick={applyPreset}
+              onClear={clearPreset}
+              isAdmin={isAdmin}
+              modelNames={modelNames}
+              current={model ? { modelSlug: model.slug, params: Object.fromEntries(Object.entries(values).filter(([k]) => k !== "prompt")), prompt: activePreset?.promptTemplate && !promptDetached ? activePreset.promptTemplate : (values.prompt as string | undefined) } : null}
+              startSaving={openPresetSave && isAdmin}
+            />
+
             {model && (
               <SettingsPanel
+                locked={locked}
                 open={expanded}
                 onClose={closeSettings}
                 anchorId="settings-chip"
@@ -334,9 +416,21 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
             {model && mediaFields.length > 0 && (
               <div className="scrollbar-none flex gap-3 overflow-x-auto px-4 pt-4 sm:px-5">
                 {mediaFields.map((f) => (
-                  <div key={f.name} className="shrink-0">
+                  <div key={f.name} className={cn("relative shrink-0", locked.has(f.name) && "pointer-events-none opacity-60")} aria-disabled={locked.has(f.name) || undefined}>
+                    {locked.has(f.name) && <LockSimple size={12} className="absolute top-0 right-0 text-accent-text" aria-label="Locked by preset" />}
                     <FieldInput field={f} value={values[f.name]} onChange={(v) => setValue(f.name, v)} error={fieldErrors[f.name]} characters={characters} maxMb={maxUploadMb} keySource={keySource} modelSlug={model.slug} compact />
                   </div>
+                ))}
+              </div>
+            )}
+
+            {model && promptField && templateVars.length > 0 && (
+              <div className="grid gap-2 px-4 pt-4 sm:grid-cols-2 sm:px-5">
+                {templateVars.map((v) => (
+                  <label key={v} className="block">
+                    <span className="mb-1 block text-[12px] font-medium text-fg-muted">{v}</span>
+                    <input value={presetVars[v] ?? ""} onChange={(e) => setVar(v, e.target.value)} maxLength={500} className="h-9 w-full rounded-[10px] bg-surface-2/80 px-3 text-sm text-fg placeholder:text-fg-subtle focus:bg-surface-3 focus:outline-none" placeholder={`Enter ${v}`} />
+                  </label>
                 ))}
               </div>
             )}
@@ -351,7 +445,12 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
                   maxLength={promptField.maxLength}
                   placeholder={model.outputType === "video" ? "Describe the shot, the motion and the mood" : "Describe what you want to see"}
                   value={(values.prompt as string) ?? ""}
-                  onChange={(e) => setValue("prompt", e.target.value)}
+                  readOnly={lockedPrompt}
+                  onChange={(e) => {
+                    if (lockedPrompt) return;
+                    if (templateVars.length) setPromptDetached(true);
+                    setValue("prompt", e.target.value);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && canGenerate) {
                       e.preventDefault();
@@ -360,14 +459,21 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
                   }}
                   aria-invalid={!!fieldErrors.prompt}
                   aria-describedby="cost-line"
-                  className="prompt-input"
+                  className={cn("prompt-input", lockedPrompt && "text-fg-muted")}
                 />
+                {lockedPrompt && <p className="flex items-center gap-1.5 pb-1 text-[12px] text-fg-subtle"><LockSimple size={12} aria-hidden /> The prompt comes from the {activePreset!.name} preset. Fill in the fields above.</p>}
                 {fieldErrors.prompt && <p role="alert" className="pb-1 text-[13px] text-danger">{fieldErrors.prompt}</p>}
               </div>
             )}
 
             <div className="flex items-center gap-1.5 px-2.5 pt-1 pb-2.5 sm:px-3 sm:pb-3">
               <div className="fade-x scrollbar-none flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pr-6">
+              {(presets.length > 0 || isAdmin) && (
+                <button id="preset-chip" type="button" onClick={() => { setPresetMenuOpen((x) => !x); setExpanded(false); }} aria-expanded={presetMenuOpen} className={cn("chip shrink-0", (presetMenuOpen || activePreset) && "chip-on")}>
+                  <BookmarkSimple size={16} weight={activePreset ? "fill" : "regular"} className={cn("shrink-0", activePreset && "text-accent-text")} aria-hidden />
+                  <span className="max-w-[160px] truncate">{activePreset ? activePreset.name : "Presets"}</span>
+                </button>
+              )}
               {model && (
                 <button type="button" onClick={() => setPickerOpen(true)} className="chip shrink-0" aria-label={`Model: ${model.name}. Change model`}>
                   <TypeIcon size={16} className="shrink-0 text-accent-text" aria-hidden />
@@ -376,7 +482,7 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
                 </button>
               )}
               {(settingFields.length > 0 || advancedFields.length > 0) && (
-                <button id="settings-chip" type="button" onClick={() => setExpanded((x) => !x)} aria-expanded={expanded} aria-controls="composer-settings" className={cn("chip shrink-0", expanded && "chip-on")}>
+                <button id="settings-chip" type="button" onClick={() => { setExpanded((x) => !x); setPresetMenuOpen(false); }} aria-expanded={expanded} aria-controls="composer-settings" className={cn("chip shrink-0", expanded && "chip-on")}>
                   <SlidersHorizontal size={16} className="shrink-0" aria-hidden />
                   <span className="mono hidden max-w-[200px] truncate sm:inline">{summary || "Settings"}</span>
                   <span className="sm:hidden">Settings</span>
@@ -462,7 +568,8 @@ export function Studio({ models, characters, initialFeed, keys, maxUploadMb, rem
         )}
       </Dialog>
 
-      <Viewer g={viewing} onClose={() => setViewing(null)} onRemix={remix} onFavorite={favorite} />
+      <Viewer g={viewing} onClose={() => setViewing(null)} onRemix={remix} onFavorite={favorite} onCollect={(x) => { setViewing(null); setCollecting(x.id); }} />
+      <CollectionPicker generationId={collecting} onClose={() => setCollecting(null)} />
     </div>
   );
 }

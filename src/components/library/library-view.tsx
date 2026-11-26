@@ -8,6 +8,7 @@ import { EmptyState, LinkButton, Select } from "@/components/ui";
 import { JobCard } from "@/components/studio/job-card";
 import type { ClientGeneration } from "@/components/studio/types";
 import { Viewer } from "./viewer";
+import { CollectionPicker } from "@/components/collections/collection-picker";
 
 type Item = ClientGeneration & { owner: string };
 
@@ -16,6 +17,7 @@ export function LibraryView({ items: initial, filters, models, members, teams, i
   const sp = useSearchParams();
   const [items, setItems] = useState(initial);
   const [viewing, setViewing] = useState<Item | null>(null);
+  const [collecting, setCollecting] = useState<string | null>(null);
 
   const set = (key: string, value: string | undefined) => {
     const next = new URLSearchParams(sp.toString());
@@ -112,7 +114,7 @@ export function LibraryView({ items: initial, filters, models, members, teams, i
         <div className="masonry columns-2 md:columns-3 xl:columns-4">
           {items.map((g) => (
             <div key={g.id}>
-              <JobCard g={g} onOpen={() => setViewing(g)} onFavorite={g.mine ? favorite : undefined} onRemix={() => router.push(`/studio?remix=${g.id}`)} />
+              <JobCard g={g} onOpen={() => setViewing(g)} onFavorite={g.mine ? favorite : undefined} onCollect={g.status === "completed" ? (x) => setCollecting(x.id) : undefined} onRemix={() => router.push(`/studio?remix=${g.id}`)} />
               {scope !== "mine" && <p className="mt-1 truncate px-1 text-[12px] text-fg-subtle">{g.owner}</p>}
             </div>
           ))}
@@ -124,7 +126,8 @@ export function LibraryView({ items: initial, filters, models, members, teams, i
           {hasMore && <Link href={pageHref(page + 1)} className="h-10 rounded-full border border-border px-4 leading-10 text-sm">Older</Link>}
         </nav>
       )}
-      <Viewer g={viewing} owner={viewing && !viewing.mine ? viewing.owner : undefined} onClose={() => setViewing(null)} onRemix={(g) => router.push(`/studio?remix=${g.id}`)} onFavorite={viewing?.mine || isAdmin ? favorite : undefined} onDelete={viewing?.mine || isAdmin ? remove : undefined} />
+      <Viewer g={viewing} owner={viewing && !viewing.mine ? viewing.owner : undefined} onClose={() => setViewing(null)} onRemix={(g) => router.push(`/studio?remix=${g.id}`)} onFavorite={viewing?.mine || isAdmin ? favorite : undefined} onDelete={viewing?.mine || isAdmin ? remove : undefined} onCollect={(x) => { setViewing(null); setCollecting(x.id); }} />
+      <CollectionPicker generationId={collecting} onClose={() => setCollecting(null)} />
     </>
   );
 }

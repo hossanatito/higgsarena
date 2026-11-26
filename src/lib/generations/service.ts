@@ -25,6 +25,8 @@ import type { Ctx } from "@/lib/session";
 import { notifyAdmins, once } from "@/lib/notifications";
 import { templates } from "@/lib/email/templates";
 import { afterFinish } from "./after-finish";
+import { usablePreset } from "@/lib/presets/repo";
+import { applyPresetLocks, missingVariables, promptLocked } from "@/lib/presets/core";
 
 export type Generation = typeof generation.$inferSelect;
 export type KeySource = "org" | "personal";
@@ -36,6 +38,15 @@ export type Prepared = {
   keySource: KeySource;
   estimateUsd: number | null;
   costUnknown: boolean;
+  presetId: string | null;
+};
+
+export type GenerateInput = {
+  modelSlug: string;
+  params: Record<string, unknown>;
+  keySource?: KeySource;
+  presetId?: string;
+  presetVars?: Record<string, string>;
 };
 
 export type PrepareResult =
@@ -65,14 +76,28 @@ export async function resolveCredential(ctx: Pick<Ctx, "org" | "user">, wanted?:
  */
 export async function prepareGeneration(
   ctx: Ctx,
-  input: { modelSlug: string; params: Record<string, unknown>; keySource?: KeySource },
+  input: GenerateInput,
   opts: { skipBudget?: boolean; skipEstimate?: boolean } = {},
 ): Promise<PrepareResult> {
   const model = await getModel(input.modelSlug);
   if (!model || !model.enabled || model.category === "character") {
     return { ok: false, kind: "unavailable", message: "That model is not available. An admin may have turned it off." };
   }
-  const validated = validateParams(model.fields, input.params ?? {}, { allowHttpOrigin: insecureMediaOrigin() });
+  // Brand presets: locked settings are re-applied here, so the browser can't override them.
+  let rawParams = input.params ?? {};
+  let presetId: string | null = null;
+  if (input.presetId) {
+    const p = await usablePreset(ctx, input.presetId);
+    if (!p) return { ok: false, kind: "unavailable", message: "That preset is no longer available to you." };
+    if (p.modelSlug !== model.slug) return { ok: false, kind: "invalid", errors: {}, message: `The ${p.name} preset is for a different model.` };
+    if (promptLocked(p) && missingVariables(p.promptTemplate, input.presetVars ?? {}).length) {
+      const missing = missingVariables(p.promptTemplate, input.presetVars ?? {});
+      return { ok: false, kind: "invalid", errors: { prompt: `Fill in ${missing.join(", ")}` }, message: `Fill in ${missing.join(", ")} for the ${p.name} preset.` };
+    }
+    rawParams = applyPresetLocks(p, rawParams, input.presetVars ?? {});
+    presetId = p.id;
+  }
+  const validated = validateParams(model.fields, rawParams, { allowHttpOrigin: insecureMediaOrigin() });
   if (!validated.ok) {
     return { ok: false, kind: "invalid", errors: validated.errors, message: Object.values(validated.errors)[0] ?? "Check the highlighted fields." };
   }
@@ -111,7 +136,7 @@ export async function prepareGeneration(
       if (blocked) return { ok: false, kind: "blocked", reason: blocked, estimateUsd, overridable: true };
     }
   }
-  return { ok: true, prepared: { model, params, credential: cred.row, keySource: cred.source, estimateUsd, costUnknown }, remainingUsd };
+  return { ok: true, prepared: { model, params, credential: cred.row, keySource: cred.source, estimateUsd, costUnknown, presetId }, remainingUsd };
 }
 
 async function handleKeyError(orgId: string, cred: CredentialRow, e: unknown) {
@@ -159,6 +184,7 @@ export async function submitGeneration(ctx: Ctx, p: Prepared, opts: { overrideId
       keySource: p.keySource,
       credentialId: p.credential.id,
       overrideId: opts.overrideId ?? null,
+      presetId: p.presetId,
     })
     .returning();
   return sendToHiggsfield(row!, p.credential, p.model, ctx);

@@ -21,7 +21,7 @@ const usd = (v: string | number | null) => `$${Number(v ?? 0).toFixed(2)}`;
  */
 export async function requestOverride(
   ctx: Ctx,
-  input: { modelSlug: string; params: Record<string, unknown>; keySource?: KeySource; note?: string },
+  input: { modelSlug: string; params: Record<string, unknown>; keySource?: KeySource; presetId?: string; presetVars?: Record<string, string>; note?: string },
 ): Promise<{ ok: true; override: Override } | { ok: false; message: string }> {
   const result = await prepareGeneration(ctx, input);
   if (result.ok) return { ok: false, message: "This job is within budget now. Generate it directly." };
@@ -36,6 +36,8 @@ export async function requestOverride(
       modelSlug: input.modelSlug,
       params: input.params,
       keySource: input.keySource ?? "org",
+      presetId: input.presetId ?? null,
+      presetVars: input.presetVars ?? null,
       amountUsd: result.estimateUsd.toFixed(5),
       note: input.note?.slice(0, 500) || null,
       blockedBy: result.reason,
@@ -101,7 +103,7 @@ export async function decideOverride(
     }
     const prepared = await prepareGeneration(
       memberCtx,
-      { modelSlug: row.modelSlug, params: row.params, keySource: row.keySource },
+      { modelSlug: row.modelSlug, params: row.params, keySource: row.keySource, presetId: row.presetId ?? undefined, presetVars: row.presetVars ?? undefined },
       { skipBudget: true },
     );
     if (!prepared.ok) {

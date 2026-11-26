@@ -8,6 +8,7 @@ import { listModels } from "@/lib/catalog/repo";
 import { Page } from "@/components/page";
 import { PageHeader } from "@/components/ui";
 import { LibraryView } from "@/components/library/library-view";
+import { LibraryTabs } from "@/components/collections/library-tabs";
 
 export const metadata = { title: "Library" };
 const PAGE_SIZE = 40;
@@ -61,6 +62,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
 
   return (
     <Page wide>
+      <LibraryTabs active="results" />
       <PageHeader title="Library" description="Your images and videos. Files hosted by Higgsfield expire after 7 days unless your admins mirror them to storage." />
       <LibraryView key={JSON.stringify(sp)} items={items} filters={sp} models={models} members={members} teams={teams} isAdmin={isAdmin} hasShared={hasShared} page={page} hasMore={hasMore} />
     </Page>

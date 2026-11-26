@@ -1,7 +1,7 @@
 "use client";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowCounterClockwise, Info, Minus, Plus, X } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, Info, LockSimple, Minus, Plus, X } from "@phosphor-icons/react";
 import type { FieldSpec } from "@/lib/catalog/types";
 import { cn } from "@/lib/cn";
 import { FieldInput, Switch } from "./fields";
@@ -128,7 +128,23 @@ function ToggleRow({ field, value, onChange }: { field: FieldSpec; value: unknow
 }
 
 /** Pick the best control for a field. */
-function Control({ field, common, extra }: { field: FieldSpec; common: Common; extra: { characters: CharacterOption[]; maxMb: number; keySource?: "org" | "personal"; modelSlug: string } }) {
+function Control({ field, common, extra, locked }: { field: FieldSpec; common: Common; extra: { characters: CharacterOption[]; maxMb: number; keySource?: "org" | "personal"; modelSlug: string }; locked?: boolean }) {
+  if (locked) {
+    return (
+      <div className="relative">
+        <div className="pointer-events-none opacity-55" aria-disabled>
+          <ControlInner field={field} common={common} extra={extra} />
+        </div>
+        <span className="absolute top-0 right-0 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent-text">
+          <LockSimple size={10} aria-hidden /> Locked by preset
+        </span>
+      </div>
+    );
+  }
+  return <ControlInner field={field} common={common} extra={extra} />;
+}
+
+function ControlInner({ field, common, extra }: { field: FieldSpec; common: Common; extra: { characters: CharacterOption[]; maxMb: number; keySource?: "org" | "personal"; modelSlug: string } }) {
   const value = common.values[field.name];
   const onChange = (v: unknown) => common.setValue(field.name, v);
   const err = common.errors[field.name];
@@ -152,6 +168,7 @@ export function SettingsPanel({
   open,
   onClose,
   anchorId,
+  locked,
   modelName,
   settingFields,
   advancedFields,
@@ -168,6 +185,7 @@ export function SettingsPanel({
   open: boolean;
   onClose: () => void;
   anchorId: string;
+  locked?: Set<string>;
   modelName: string;
   settingFields: FieldSpec[];
   advancedFields: FieldSpec[];
@@ -251,11 +269,11 @@ export function SettingsPanel({
           )}
 
           <div className="fade-y min-h-0 flex-1 overflow-y-auto px-4 pt-3 pb-5">
-            {active === "general" && <div className="grid gap-5">{settingFields.map((f) => <Control key={f.name} field={f} common={common} extra={extra} />)}</div>}
+            {active === "general" && <div className="grid gap-5">{settingFields.map((f) => <Control key={f.name} field={f} common={common} extra={extra} locked={locked?.has(f.name)} />)}</div>}
             {active === "advanced" && (
               <div className="grid gap-5">
                 <p className="text-[12px] text-fg-subtle">These start at the model's defaults. Empty fields are left to the model.</p>
-                {advancedFields.map((f) => <Control key={f.name} field={f} common={common} extra={extra} />)}
+                {advancedFields.map((f) => <Control key={f.name} field={f} common={common} extra={extra} locked={locked?.has(f.name)} />)}
               </div>
             )}
             {active === "notes" && notes && <div className="text-[13px] leading-relaxed whitespace-pre-line text-fg-muted">{notes}</div>}

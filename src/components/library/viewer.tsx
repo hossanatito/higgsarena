@@ -1,13 +1,13 @@
 "use client";
 import { useState } from "react";
-import { ArrowsClockwise, Copy, DownloadSimple, Heart, Trash, X, Check, ArrowSquareOut } from "@phosphor-icons/react";
+import { ArrowsClockwise, FolderSimplePlus, Copy, DownloadSimple, Heart, Trash, X, Check, ArrowSquareOut } from "@phosphor-icons/react";
 import { Dialog } from "@/components/dialog";
 import { Badge, Button } from "@/components/ui";
 import { dateTime, expiryLabel, usd } from "@/lib/format";
 import { MediaPreview, STATUS, altText } from "@/components/studio/job-card";
 import type { ClientGeneration } from "@/components/studio/types";
 
-export function Viewer({ g, onClose, onRemix, onFavorite, onDelete, owner }: { g: ClientGeneration | null; onClose: () => void; onRemix?: (g: ClientGeneration) => void; onFavorite?: (g: ClientGeneration) => void; onDelete?: (g: ClientGeneration) => Promise<void>; owner?: string }) {
+export function Viewer({ g, onClose, onRemix, onFavorite, onDelete, onCollect, owner }: { g: ClientGeneration | null; onClose: () => void; onRemix?: (g: ClientGeneration) => void; onFavorite?: (g: ClientGeneration) => void; onDelete?: (g: ClientGeneration) => Promise<void>; onCollect?: (g: ClientGeneration) => void; owner?: string }) {
   const [copied, setCopied] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -92,6 +92,7 @@ export function Viewer({ g, onClose, onRemix, onFavorite, onDelete, owner }: { g
               </a>
             )}
             {onRemix && <Button onClick={() => onRemix(g)}><ArrowsClockwise size={18} aria-hidden /> Remix</Button>}
+            {onCollect && <Button onClick={() => onCollect(g)}><FolderSimplePlus size={18} aria-hidden /> Collect</Button>}
             {onFavorite && (
               <Button onClick={() => onFavorite(g)} aria-pressed={g.favorite}>
                 <Heart size={18} weight={g.favorite ? "fill" : "regular"} className={g.favorite ? "text-accent-text" : ""} aria-hidden /> {g.favorite ? "Favourited" : "Favourite"}

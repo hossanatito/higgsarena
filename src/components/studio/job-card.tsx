@@ -1,7 +1,7 @@
 "use client";
 import { motion, useReducedMotion } from "motion/react";
 import { useState, type ComponentType } from "react";
-import { ArrowCounterClockwise, ClockCountdown, ImageBroken, CloudSlash, DownloadSimple, EyeSlash, FileArchive, Heart, HourglassMedium, PaperPlaneTilt, Play, Prohibit, Shuffle, Sparkle, Stack, WarningOctagon, type IconProps } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ClockCountdown, FolderSimpleMinus, FolderSimplePlus, ImageBroken, CloudSlash, DownloadSimple, EyeSlash, FileArchive, Heart, HourglassMedium, PaperPlaneTilt, Play, Prohibit, Shuffle, Sparkle, Stack, WarningOctagon, type IconProps } from "@phosphor-icons/react";
 import { cn } from "@/lib/cn";
 import { expiryLabel, relativeTime, usd } from "@/lib/format";
 import type { ClientGeneration } from "./types";
@@ -111,7 +111,7 @@ function Chip({ children, tone = "neutral", title }: { children: React.ReactNode
   );
 }
 
-export function JobCard({ g, onRemix, onCancel, onOpen, onFavorite, tile }: { g: ClientGeneration; onRemix?: (g: ClientGeneration) => void; onCancel?: (g: ClientGeneration) => void; onOpen?: (g: ClientGeneration) => void; onFavorite?: (g: ClientGeneration) => void; tile?: boolean }) {
+export function JobCard({ g, onRemix, onCancel, onOpen, onFavorite, onCollect, onRemove, tile }: { g: ClientGeneration; onRemix?: (g: ClientGeneration) => void; onCancel?: (g: ClientGeneration) => void; onOpen?: (g: ClientGeneration) => void; onFavorite?: (g: ClientGeneration) => void; onCollect?: (g: ClientGeneration) => void; onRemove?: (g: ClientGeneration) => void; tile?: boolean }) {
   const reduce = useReducedMotion();
   const active = g.status === "submitting" || g.status === "queued" || g.status === "in_progress";
   const done = g.status === "completed";
@@ -179,6 +179,16 @@ export function JobCard({ g, onRemix, onCancel, onOpen, onFavorite, tile }: { g:
             {onFavorite && (
               <OverlayButton label={g.favorite ? "Remove from favourites" : "Add to favourites"} onClick={() => onFavorite(g)} pressed={g.favorite}>
                 <Heart size={16} weight={g.favorite ? "fill" : "regular"} className={g.favorite ? "text-accent" : ""} aria-hidden />
+              </OverlayButton>
+            )}
+            {onCollect && (
+              <OverlayButton label="Add to collection" onClick={() => onCollect(g)}>
+                <FolderSimplePlus size={16} aria-hidden />
+              </OverlayButton>
+            )}
+            {onRemove && (
+              <OverlayButton label="Remove from this collection" onClick={() => onRemove(g)}>
+                <FolderSimpleMinus size={16} aria-hidden />
               </OverlayButton>
             )}
             {g.outputs[0] && (

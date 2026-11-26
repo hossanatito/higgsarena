@@ -3,11 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 import {
+  BookmarkSimple,
   BookOpenText,
   CaretDown,
   ChartLineUp,
   ClockCounterClockwise,
   Cube,
+  FolderSimple,
   GearSix,
   HardDrives,
   ImagesSquare,
@@ -39,6 +41,7 @@ function groupsFor(isAdmin: boolean, isOwner: boolean, pending: number): Group[]
         { href: "/studio", label: "Studio", icon: MagicWand },
         { href: "/characters", label: "Characters", icon: UserFocus },
         { href: "/library", label: "Library", icon: ImagesSquare },
+        { href: "/collections", label: "Collections", icon: FolderSimple },
       ],
     },
   ];
@@ -67,6 +70,7 @@ function groupsFor(isAdmin: boolean, isOwner: boolean, pending: number): Group[]
         label: "Configuration",
         items: [
           { href: "/admin/models", label: "Models", icon: Cube },
+          { href: "/admin/presets", label: "Presets", icon: BookmarkSimple },
           { href: "/admin/keys", label: "API keys", icon: Key },
           { href: "/admin/output", label: "Output", icon: HardDrives },
           { href: "/admin/audit", label: "Audit log", icon: ClockCounterClockwise },

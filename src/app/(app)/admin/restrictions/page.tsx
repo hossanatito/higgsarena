@@ -70,7 +70,7 @@ export default async function RestrictionsPage({ searchParams }: { searchParams:
                     {scope === "org" ? "Applies to every member. The monthly budget caps total spend on the organization key." : scope === "team" ? "Applies to everyone in this team. The budget caps this team's total spend." : "Personal overrides. The budget caps this member's own spend."}
                   </p>
                 </div>
-                {scope !== "org" && current && <ActionButton variant="ghost" run={() => clearPolicy(scope, scopeId)} confirm="Remove all rules here?">Remove rules</ActionButton>}
+                {scope !== "org" && current && <ActionButton variant="ghost" run={async () => { "use server"; return clearPolicy(scope as "team" | "member", scopeId); }} confirm="Remove all rules here?">Remove rules</ActionButton>}
               </div>
               <ActionForm action={savePolicy} key={`${scope}-${scopeId}`}>
                 <input type="hidden" name="scope" value={scope} />

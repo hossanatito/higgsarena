@@ -2,6 +2,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { character, generation } from "@/lib/db/schema";
 import { hasRole, requireContext } from "@/lib/session";
+import { presetsFor, toClientPreset } from "@/lib/presets/repo";
 import { listModels, toPublicModel } from "@/lib/catalog/repo";
 import { isModelAllowed } from "@/lib/policy/engine";
 import { budgetUsage, effectiveFor } from "@/lib/policy/load";
@@ -72,6 +73,10 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
       remainingUsd={remainingUsd}
       initial={initial}
       setupHint={setupHint}
+      presets={(await presetsFor(ctx)).filter((p) => models.some((m) => m.slug === p.modelSlug)).map(toClientPreset)}
+      isAdmin={hasRole(ctx.role, "admin")}
+      initialPresetId={sp.preset}
+      openPresetSave={sp.savePreset === "1"}
     />
   );
 }

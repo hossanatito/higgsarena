@@ -29,7 +29,7 @@ export default async function KeysPage() {
               {cred.lastError && <Notice tone="danger" title="Higgsfield reported a problem">{cred.lastError}</Notice>}
               <div className="flex flex-wrap gap-2">
                 <ActionButton run={testOrgKey} size="md">Test key</ActionButton>
-                <ActionButton run={() => removeOrgKey("key")} variant="danger" size="md" confirm="Remove the key? Generation stops until a new one is added.">Remove</ActionButton>
+                <ActionButton run={async () => { "use server"; return removeOrgKey("key"); }} variant="danger" size="md" confirm="Remove the key? Generation stops until a new one is added.">Remove</ActionButton>
               </div>
             </div>
           ) : (
@@ -53,7 +53,7 @@ export default async function KeysPage() {
           </dl>
           <p className="mt-3 text-[13px] text-fg-muted">Find the secret in Higgsfield Console → Settings → Webhook signing secret. It starts with <code>whsec_</code>.</p>
           <div className="mt-4">
-            <ActionForm action={saveOrgKey} submitLabel="Save signing secret" resetOnSuccess footer={cred?.webhookSecretHint ? <ActionButton run={() => removeOrgKey("webhook")} variant="ghost" size="md" confirm="Remove the secret?">Remove secret</ActionButton> : undefined}>
+            <ActionForm action={saveOrgKey} submitLabel="Save signing secret" resetOnSuccess footer={cred?.webhookSecretHint ? <ActionButton run={async () => { "use server"; return removeOrgKey("webhook"); }} variant="ghost" size="md" confirm="Remove the secret?">Remove secret</ActionButton> : undefined}>
               <Field label="Webhook signing secret" htmlFor="k-wh"><Input id="k-wh" name="webhookSecret" type="password" className="mono" placeholder="whsec_…" autoComplete="off" spellCheck={false} /></Field>
             </ActionForm>
           </div>

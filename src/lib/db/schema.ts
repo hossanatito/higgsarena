@@ -257,6 +257,8 @@ export const budgetOverride = pgTable(
     modelSlug: text("model_slug").notNull(),
     params: jsonb("params").$type<Record<string, unknown>>().notNull(),
     keySource: text("key_source").$type<"org" | "personal">().notNull().default("org"),
+    presetId: text("preset_id"),
+    presetVars: jsonb("preset_vars").$type<Record<string, string>>(),
     amountUsd: money("amount_usd").notNull(),
     note: text("note"),
     blockedBy: jsonb("blocked_by").$type<BlockReason>().notNull(),
@@ -404,6 +406,7 @@ export const generation = pgTable(
     keySource: text("key_source").$type<"org" | "personal">().notNull().default("org"),
     credentialId: text("credential_id").references(() => apiCredential.id, { onDelete: "set null" }),
     overrideId: text("override_id"),
+    presetId: text("preset_id"),
     error: text("error"),
     correlationId: text("correlation_id"),
     webhookUsed: boolean("webhook_used").notNull().default(false),
@@ -511,3 +514,77 @@ export const appRateLimit = pgTable("app_rate_limit", {
   windowStart: ts("window_start").notNull(),
   count: integer("count").notNull().default(0),
 });
+
+/* ------------------------------------------------------------------ */
+/* Phase 3: presets and collections                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A prompt template and/or brand preset: a model, starting values, and the
+ * settings members may not change. Prompt templates can contain {{fields}}
+ * that members fill in.
+ */
+export const preset = pgTable(
+  "preset",
+  {
+    id: id(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    modelSlug: text("model_slug").notNull(),
+    promptTemplate: text("prompt_template"),
+    params: jsonb("params").$type<Record<string, unknown>>().notNull().default({}),
+    /** Field names members cannot change. Enforced on the server. */
+    lockedFields: text("locked_fields").array().notNull().default(sql`'{}'::text[]`),
+    /** Empty = every member; otherwise only members of these teams. */
+    teamIds: text("team_ids").array().notNull().default(sql`'{}'::text[]`),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    archivedAt: ts("archived_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("preset_org_idx").on(t.organizationId)],
+);
+
+export const collection = pgTable(
+  "collection",
+  {
+    id: id(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    ownerMemberId: text("owner_member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** private: owner (and admins). team: everyone in the studio can view. */
+    visibility: text("visibility").$type<"private" | "team">().notNull().default("private"),
+    /** SHA-256 of the read-only link token. Null when sharing is off. */
+    shareTokenHash: text("share_token_hash").unique(),
+    shareExpiresAt: ts("share_expires_at"),
+    shareShowPrompts: boolean("share_show_prompts").notNull().default(false),
+    shareCreatedAt: ts("share_created_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("collection_org_idx").on(t.organizationId), index("collection_owner_idx").on(t.ownerMemberId)],
+);
+
+export const collectionItem = pgTable(
+  "collection_item",
+  {
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collection.id, { onDelete: "cascade" }),
+    generationId: text("generation_id")
+      .notNull()
+      .references(() => generation.id, { onDelete: "cascade" }),
+    addedBy: text("added_by").references(() => user.id, { onDelete: "set null" }),
+    position: integer("position").notNull().default(0),
+    addedAt: ts("added_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.collectionId, t.generationId] }), index("collection_item_gen_idx").on(t.generationId)],
+);

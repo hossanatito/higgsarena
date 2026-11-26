@@ -10,6 +10,8 @@ const Body = z.object({
   modelSlug: z.string().min(1).max(120),
   params: z.record(z.string(), z.unknown()).default({}),
   keySource: z.enum(["org", "personal"]).optional(),
+  presetId: z.string().max(64).optional(),
+  presetVars: z.record(z.string().max(40), z.string().max(500)).optional(),
   note: z.string().max(500).optional(),
 });
 
